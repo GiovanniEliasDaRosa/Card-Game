@@ -1,0 +1,13 @@
+[
+{
+  'user': 'giovanni',
+  'cards': [
+    { 'value': '1', 'color': 'blue' },
+    { 'value': '2', 'color': 'red' },
+    { 'value': '4', 'color': 'yellow' },
+    { 'value': '+2', 'color': 'red' },
+    { 'value': '+4', 'color': 'black' },
+    { 'value': 'changecolor', 'color': 'black' }
+  ]
+}
+]

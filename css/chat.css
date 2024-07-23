@@ -1,0 +1,132 @@
+main {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  min-height: 100vh;
+}
+
+#chat {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  flex-direction: column;
+  gap: 1em;
+  height: 100vh;
+  height: 100dvh;
+  width: clamp(max(20em, 25vw), min(25em, 40vw), 24em);
+  padding: 1em;
+}
+
+#chatMessage {
+  background-color: hsla(0, 0%, 100%, 0.1);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.2);
+  padding: 0.5em 1em;
+  font-size: 1rem;
+  border-radius: 0.5em;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overflow-x: hidden;
+}
+
+#chatMessage > p {
+  overflow-wrap: break-word;
+  white-space: wrap;
+  overflow: hidden;
+}
+
+#chatMessage p:has(> .server) {
+  border-bottom: solid 0.1em hsla(0, 100%, 50%, 0.5);
+  padding-bottom: 0.25em;
+  margin-bottom: 0.5em;
+}
+
+#chatMessage .server {
+  color: hsl(0, 75%, 60%);
+  font-weight: 500;
+}
+
+#chatMessage .user {
+  font-weight: 500;
+}
+
+#userName {
+  font-weight: 600;
+}
+
+#header {
+  background-color: hsl(0, 0%, 20%);
+  padding: 1em;
+}
+
+#newmessage {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5em;
+}
+
+#message {
+  width: 100%;
+}
+
+@property --spin-color {
+  syntax: "<number>"; /* <- defined as type number for the transition to work */
+  initial-value: 0;
+  inherits: false;
+}
+
+.loadingspinner {
+  /* --bg-color: hsl(210, 10%, 10%); */
+  --bg-color: hsl(210deg 4.08% 19.22%);
+  /* --spin-color: hsl(0, 100%, 50%); */
+  --spin-color-comp: hsl(var(--spin-color), 50%, 80%);
+
+  --wbg: linear-gradient(var(--bg-color), var(--bg-color));
+  height: 4em;
+  width: 4em;
+  flex: 0 0 4em;
+
+  margin: 1em auto;
+  border-radius: 50%;
+  border: 0.25em solid transparent;
+  animation: spin 2s linear infinite, 8s rgbBackground infinite;
+
+  /* background: var(--wbg), conic-gradient(from 0.15turn, transparent, transparent, var(--spin-color)); */
+
+  background: var(--wbg),
+    conic-gradient(
+      from 0.15turn,
+      transparent 0turn,
+      transparent 0.05turn,
+      var(--spin-color-comp) 0.49turn,
+      var(--spin-color-comp) 0.5turn,
+      transparent 0.5turn,
+      transparent 0.55turn,
+      var(--spin-color-comp) 0.99999turn
+    );
+
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rgbBackground {
+  0% {
+    /* --spin-color: hsl(0, 100%, 50%); */
+    --spin-color: 0;
+  }
+  50% {
+    /* --spin-color: hsl(180, 100%, 50%); */
+    --spin-color: 180;
+  }
+  100% {
+    /* --spin-color: hsl(360, 100%, 50%); */
+    --spin-color: 360;
+  }
+}

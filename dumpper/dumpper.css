@@ -1,0 +1,151 @@
+/* dumpper */
+.dumpper__div {
+  margin: 0.5em;
+  display: grid;
+  /* grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  transition: 2s grid-template-rows linear; */
+}
+/* 
+.dumpper__div[data-closed] {
+  grid-template-rows: auto 0fr;
+} */
+.dumpper__div[data-closed] .dumpper {
+  overflow-y: hidden !important;
+  /* padding: 0; */
+}
+
+/* .dumpper__div[data-closed] .dumpper * {
+  padding-top: 1em;
+  display: block;
+} */
+
+.dumpper__header {
+  font-family: monospace;
+  border: solid 0.25rem hsla(0, 0%, 100%, 0.25);
+  border-bottom: none;
+  border-radius: 0.5em 0.5em 0 0;
+  background-color: #1f1f1f;
+  color: hsl(0, 0%, 90%);
+  padding: 0.25em 0.5em;
+  transform: translateY(0.25rem);
+  position: relative;
+  display: block;
+  width: max-content;
+  z-index: 10;
+  font-size: 1rem;
+  cursor: pointer;
+
+  font-weight: 900;
+}
+
+.dumpper__header > .path {
+  color: #9ea39c;
+}
+
+.dumpper__header .slash {
+  color: #d26134;
+}
+
+.dumpper__header > .number {
+  color: #b5cea8;
+}
+
+.dumpper {
+  margin: 0em;
+  border: solid 0.25rem hsla(0, 0%, 100%, 0.25);
+  background-color: #1f1f1f;
+  backdrop-filter: blur(2px);
+  padding: 0.5em;
+  border-radius: 0 0.5em 0.5em 0.5em;
+  display: block !important;
+  color: hsl(0, 0%, 90%);
+
+  max-height: calc(100vh - 6em);
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  transition: height 500ms ease-out;
+  /* overflow-y: hidden; */
+}
+
+.dumpper::-webkit-scrollbar {
+  width: min(1em, 4vw);
+}
+
+/* Track */
+.dumpper::-webkit-scrollbar-track {
+  background: hsla(0, 0%, 100%, 0.1);
+}
+
+/* Handle */
+.dumpper::-webkit-scrollbar-thumb {
+  background: hsla(0, 0%, 100%, 0.5);
+}
+
+/* Handle on hover */
+.dumpper:hover::-webkit-scrollbar-thumb,
+.dumpper::-webkit-scrollbar-thumb:hover {
+  background: hsla(0, 0%, 100%, 0.8);
+}
+
+.dumpper,
+.dumpper * {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+}
+
+.dumpper .dots {
+  color: #d26134;
+  text-shadow: 0 0 0.5em white, 0 0 0.25em white;
+}
+
+.dumpper .number {
+  color: #b5cea8;
+}
+
+.dumpper .quote,
+.dumpper .quote > .number {
+  color: #ce9178;
+}
+
+.dumpper .quote.qt2 {
+  color: #e8b5a1;
+}
+
+.dumpper .quote.qt3 {
+  color: #d26134;
+}
+
+.dumpper .pare {
+  color: #da70d6;
+}
+
+.dumpper .curl {
+  color: #179fff;
+}
+
+.dumpper .square {
+  color: #ffd700;
+}
+
+.dumpper .arrow {
+  color: #569cd6;
+  padding-inline: 0.5em;
+}
+
+.dumpper .arrow + * {
+  border-left: solid 0.2em #5c5c5c;
+  padding-left: 1em;
+}
+
+.dumpper .somes {
+  color: #4fc1ff;
+  /* padding-inline: 0.5em; */
+}
+
+.dumpper .other {
+  color: #c586c0;
+  padding-inline: 0.5em;
+}

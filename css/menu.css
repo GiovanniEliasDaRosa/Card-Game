@@ -1,0 +1,58 @@
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding: 1.5em;
+}
+/* 
+#usernameDiv {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+} */
+
+/* label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+  line-height: 1em;
+  padding: 1em;
+} */
+
+label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  line-height: 1em;
+}
+
+h1 {
+  text-align: center;
+}
+
+#warntext {
+  padding: 1em;
+  background-color: hsl(25, 95%, 15%);
+  border: solid 0.1em hsl(25, 100%, 50%);
+  border-radius: 1em;
+}
+
+#headerTitle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+#cardImage {
+  image-rendering: pixelated;
+  width: 2em;
+}

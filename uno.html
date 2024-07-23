@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uno</title>
+    <link rel="icon" href="img/favicon_16x16.png" sizes="16x16" />
+
+    <link rel="stylesheet" href="css/icons.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/chat.css" />
+    <link rel="stylesheet" href="css/uno.css" />
+
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <div id="uno">
+        <div>
+          <p>Your cards</p>
+          <div id="yourcards">0</div>
+          <button id="playCard">Play</button>
+        </div>
+        <div id="testHUD">
+          <p id="testHUDup" class="testHUDicon icons nomargin up"></p>
+          <p id="testHUDdown" class="testHUDicon icons nomargin down"></p>
+        </div>
+      </div>
+      <div id="chat">
+        <div id="header">
+          <h2>Chat</h2>
+          <p>Bem vindo <span id="userName">UNDEFINEDUNDEFINEDUNDEFINEDUNDEFINED</span></p>
+        </div>
+
+        <div id="chatMessage">
+          <div class="loadingspinner"></div>
+        </div>
+
+        <div id="newmessage">
+          <input type="text" name="message" id="message" placeholder="Digite a mensagem..." />
+
+          <input type="button" value="Enviar" class="button" id="sendmessage" />
+        </div>
+        <!--
+          // Import custom dumper made by Giovanni Elias da Rosa
+          // include('dumpper/dumpper.php');
+        -->
+      </div>
+    </main>
+  </body>
+</html>

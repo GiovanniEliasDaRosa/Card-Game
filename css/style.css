@@ -1,0 +1,60 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  color: hsl(200, 10%, 90%);
+  font-family: system-ui, "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: hsl(200, 10%, 10%);
+
+  height: 100vh;
+  height: 100dvh;
+}
+
+*:is(:disabled, [disabled]) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+input[type="text"] {
+  background-color: hsla(0, 0%, 100%, 0);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.4);
+  padding: 0.5em 1em;
+  font-size: 1rem;
+  border-radius: 0.5em;
+}
+input[type="text"]:hover {
+  background-color: hsla(0, 0%, 100%, 0.1);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.5);
+}
+
+input[type="text"]:focus-visible {
+  background-color: hsla(0, 0%, 100%, 0.2);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.8);
+}
+
+.button {
+  background-color: hsla(0, 0%, 100%, 0);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.7);
+  padding: 0.5em 1em;
+  font-size: 1rem;
+  border-radius: 0.5em;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: hsla(0, 0%, 100%, 0.2);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.6);
+}
+
+.button:active,
+.button:focus-visible {
+  background-color: hsla(0, 0%, 100%, 0.5);
+  border: solid 0.1em hsla(0, 0%, 100%, 0.8);
+}
