@@ -2,7 +2,13 @@
   position: relative;
   width: 100%;
   font-size: 1.5rem;
-  padding: 0.5rem;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 0.5em;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 #testHUD {
@@ -28,3 +34,151 @@
 testHUDdown */
 /* .testHUDicon {
 } */
+
+#table {
+  justify-self: center;
+  align-self: center;
+  display: flex;
+  gap: 0.5em;
+
+  justify-content: center;
+  align-items: center;
+}
+
+/* #currenttablecard {
+  justify-self: center;
+  align-self: center;
+} */
+
+#hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  overflow: auto;
+}
+
+.card {
+  --image: url(../img/card.png);
+  --scale: 5;
+  width: calc(var(--scale) * 1rem);
+  height: calc(var(--scale) * 1.75rem);
+  border-radius: 0.5rem;
+  background-color: var(--color);
+  border: solid 0.25em hsl(0, 0%, 50%);
+  position: relative;
+
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsla(0, 0%, 100%);
+
+  /* text-shadow: 0.1em 0.1em 0 hsl(0, 0%, 100%), 0.25em 0.125em 0 hsla(0, 0%, 20%, 0.15); */
+  text-shadow: -0.1em -0.1em 0 hsla(0, 0%, 20%), 0 -0.1em 0 hsla(0, 0%, 20%),
+    0.1em -0.1em 0 hsla(0, 0%, 20%), -0.1em 0 0 hsla(0, 0%, 20%), 0.1em 0 0 hsla(0, 0%, 20%),
+    -0.1em 0.1em 0 hsla(0, 0%, 20%), 0 0.1em 0 hsla(0, 0%, 20%), 0.1em 0.1em 0 hsla(0, 0%, 20%);
+  transition: 0.2s ease-out;
+  isolation: isolate;
+}
+
+.card::before {
+  position: absolute;
+  content: "";
+  inset: 0;
+  background-image: var(--image);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 50% 50%;
+  image-rendering: pixelated;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.card[data-selected] {
+  background-color: var(--color-hover);
+  border-color: hsl(0, 0%, 0%);
+  box-shadow: 0 0 0 0.25em white;
+}
+
+.red {
+  --color: hsl(0, 90%, 65%);
+  --color-hover: hsl(0, 100%, 50%);
+}
+
+.yellow {
+  --color: hsl(50, 90%, 65%);
+  --color-hover: hsl(50, 100%, 50%);
+}
+
+.green {
+  --color: hsl(115, 90%, 65%);
+  --color-hover: hsl(115, 100%, 50%);
+}
+
+.blue {
+  --color: hsl(230, 90%, 65%);
+  --color-hover: hsl(230, 100%, 50%);
+}
+
+.skip {
+  --image: url(../img/cardskip.png);
+}
+
+.reverse {
+  --image: url(../img/cardreverse.png);
+}
+
+.draw2 {
+  --image: url(../img/carddraw2.png);
+}
+
+.wild {
+  --image: url(../img/cardwild.png);
+}
+
+.wilddrawfour {
+  --image: url(../img/cardwilddrawfour.png);
+}
+
+.black {
+  --color: black;
+}
+
+/* otherplayers */
+#otherplayers {
+  width: 100%;
+  background-color: hsla(0, 0%, 100%, 0.2);
+  min-height: 3em;
+  color: hsla(0, 0%, 100%, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.otherplayers {
+  padding: 0.25em;
+  border: solid 0.2em hsla(0, 0%, 100%, 0.8);
+  border-radius: 0.5em;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.otherplayers.you {
+  background-color: hsla(0, 100%, 50%, 0.2);
+}
+
+.otherplayers.turn {
+  background-color: hsla(71, 100%, 50%, 0.5);
+}
+
+.otherplayername {
+  font-weight: 800;
+}
+
+.otherplayercardcount {
+  font-weight: 600;
+}

@@ -6,22 +6,27 @@
     <title>Uno</title>
     <link rel="icon" href="img/favicon_16x16.png" sizes="16x16" />
 
-    <link rel="stylesheet" href="css/icons.css" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
     <link rel="stylesheet" href="css/chat.css" />
     <link rel="stylesheet" href="css/uno.css" />
 
+    <script src="js/functions.js" defer></script>
     <script src="js/main.js" defer></script>
   </head>
   <body>
     <main>
       <div id="uno">
-        <div>
-          <p>Your cards</p>
-          <div id="yourcards">0</div>
-          <button id="playCard">Play</button>
+        <div id="otherplayers">Other user's cards</div>
+
+        <div id="table">
+          <div id="currenttablecard">[cardhere]</div>
+          <button class="button" id="getMoreCard">Pescar</button>
+          <button class="button" id="playCard">Jogar carta</button>
         </div>
+        <div id="hand"></div>
         <div id="testHUD">
+          <p id="testHUDplayers" class="testHUDicon icons user">0</p>
           <p id="testHUDup" class="testHUDicon icons nomargin up"></p>
           <p id="testHUDdown" class="testHUDicon icons nomargin down"></p>
         </div>

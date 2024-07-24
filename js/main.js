@@ -3,14 +3,23 @@ let message = document.querySelector("#message");
 let sendmessage = document.querySelector("#sendmessage");
 let playCard = document.querySelector("#playCard");
 let userNameElement = document.querySelector("#userName");
+let otherplayers = document.querySelector("#otherplayers");
+let getMoreCard = document.querySelector("#getMoreCard");
+let currenttablecard = document.querySelector("#currenttablecard");
 let loadingspinner = document.querySelector(".loadingspinner");
 
 let testHUDuptimeout = "";
 let testHUDup = document.querySelector("#testHUDup");
 let testHUDdowntimeout = "";
 let testHUDdown = document.querySelector("#testHUDdown");
+let testHUDplayerstimeout = "";
+let testHUDplayers = document.querySelector("#testHUDplayers");
 
 let ws = null;
+let activeUsers = 0;
+
+// Disable(getMoreCard, false);
+// Disable(playCard, false);
 
 let userName = localStorage.getItem("username");
 if (userName == null) {
@@ -62,17 +71,78 @@ function StartWebSocket(serverADDR) {
   };
 
   ws.onmessage = (response) => {
+    // console.log(response.data);
     let result = JSON.parse(response.data);
-    chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
+    // console.log(result.type, result);
+    if (result.type == "users") {
+      activeUsers = result.usersactive;
+      UpdateActiveUsers();
+      let theircards = JSON.parse(result.theircards);
 
-    chatMessage.scroll(0, chatMessage.clientHeight);
+      let turn = result.turn;
+      let turnhasgotnewcard = result.turnhasgotnewcard;
 
-    clearTimeout(testHUDdowntimeout);
-    testHUDdown.classList.add("active");
+      let tablecard = result.tablecard;
 
-    testHUDdowntimeout = setTimeout(() => {
-      testHUDdown.classList.remove("active");
-    }, 1500);
+      currenttablecard.innerHTML = "";
+      CreateCard(tablecard.value, tablecard.color, "table");
+
+      otherplayers.innerHTML = "";
+
+      for (let i = 0; i < theircards.length; i++) {
+        const currentUser = theircards[i];
+        let classlist = "";
+        if (currentUser[0] == userName) {
+          classlist += "you ";
+        }
+        if (currentUser[0] == turn) {
+          classlist += "turn ";
+
+          if (currentUser[0] == userName) {
+            console.log(turnhasgotnewcard);
+            if (turnhasgotnewcard) {
+              getMoreCard.innerText = "Passar vez";
+            } else {
+              getMoreCard.innerText = "Pescar";
+            }
+          } else {
+            getMoreCard.innerText = "Pescar";
+          }
+        }
+
+        let result = `<p class='otherplayers ${classlist}'><span class='otherplayername'>${currentUser[0]}</span><span class='otherplayercardcount'>${currentUser[1]}</span></p>`;
+        otherplayers.innerHTML += result;
+      }
+      console.log(result);
+      // currenttablecard.innerHTML = result;
+      // return;
+    }
+
+    if (result.type != "game") {
+      chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
+      let chatmessages = [...chatMessage.children];
+      let lastchat = chatmessages[chatmessages.length - 1];
+      lastchat.scrollIntoView({ behavior: "smooth" });
+      GetWS();
+      return;
+    }
+
+    console.log("GAME ONLY");
+
+    if (result.who != userName) {
+      console.log("other user", result.who);
+      return;
+    }
+
+    let cards = result.content;
+    hand.innerHTML = "";
+    console.log(result.content);
+
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      console.log(card);
+      CreateCard(card.value, card.color);
+    }
   };
 }
 
@@ -101,6 +171,24 @@ function SendWS() {
   testHUDuptimeout = setTimeout(() => {
     testHUDup.classList.remove("active");
   }, 1000);
+}
+function GetWS() {
+  clearTimeout(testHUDdowntimeout);
+  testHUDdown.classList.add("active");
+
+  testHUDdowntimeout = setTimeout(() => {
+    testHUDdown.classList.remove("active");
+  }, 1500);
+}
+
+function UpdateActiveUsers() {
+  testHUDplayers.innerText = activeUsers;
+  clearTimeout(testHUDplayerstimeout);
+  testHUDplayers.classList.add("active");
+
+  testHUDplayerstimeout = setTimeout(() => {
+    testHUDplayers.classList.remove("active");
+  }, 1500);
 }
 
 window.onbeforeunload = () => {
@@ -137,11 +225,38 @@ window.onbeforeunload = () => {
 // });
 
 playCard.onclick = () => {
+  if (hand.querySelector("[data-selected]") == null) return;
+  // Disable(getMoreCard, false);
+  // Disable(playCard, false);
+
+  let selectedCard = hand.querySelector("[data-selected]");
+  let value = selectedCard.dataset.value;
+  let color = selectedCard.classList[1];
+  console.log(`SEND -> value='${value}' color='${color}'`);
+
   let dados = {
     type: "game",
     content: {
-      type: "userwatstoplaycard",
-      content: userName,
+      type: "wanttoplaycard",
+      content: {
+        user: userName,
+        value: value,
+        color: color,
+      },
+    },
+  };
+  ws.send(JSON.stringify(dados));
+  SendWS();
+};
+
+getMoreCard.onclick = () => {
+  let dados = {
+    type: "game",
+    content: {
+      type: "wanttogetcard",
+      content: {
+        user: userName,
+      },
     },
   };
   ws.send(JSON.stringify(dados));
@@ -156,3 +271,163 @@ message.onkeyup = (e) => {
 sendmessage.onclick = () => {
   sendMessage();
 };
+
+const hand = document.querySelector("#hand");
+
+function CreateCard(type, color, where = null) {
+  let newCard = document.createElement("button");
+  newCard.setAttribute("data-value", type);
+
+  if (type < 10) {
+    newCard.className = `card ${color}`;
+    newCard.textContent = type;
+  } else {
+    newCard.className = `card ${color} ${type}`;
+  }
+
+  if (
+    type == "skip" ||
+    type == "reverse" ||
+    type == "draw2" ||
+    type == "wild" ||
+    type == "wilddrawfour"
+  ) {
+    Disable(newCard, false);
+  }
+
+  if (where == null) {
+    newCard.onclick = () => {
+      if (newCard.dataset.selected != null) {
+        newCard.removeAttribute("data-selected");
+      } else {
+        const cards = [...document.querySelectorAll(".card")];
+        cards.forEach((newCard) => {
+          newCard.removeAttribute("data-selected");
+        });
+        newCard.setAttribute("data-selected", "");
+      }
+
+      // if (document.querySelector(".card[data-selected") == null) {
+      //   Disable(playCard, false);
+      // } else {
+      //   Enable(playCard);
+      // }
+    };
+    hand.appendChild(newCard);
+  } else {
+    currenttablecard.appendChild(newCard);
+  }
+
+  // if (type == "skip" || type == "reverse" || type == "draw2") {
+  //   console.log("skip || reverse || draw2");
+  //   newCard.className = `card ${color} ${type}`;
+  // } else if (type == "wild" || type == "wilddrawfour") {
+  //   console.log("wild || wilddrawfour");
+  //   newCard.className = `card ${color} ${type}`;
+  // } else {
+  //   newCard.className = `card ${color}`;
+  //   newCard.textContent = type;
+  // }
+
+  // <button class="card red" data-value="0">0</button>
+  // <button class="card yellow" data-value="1">1</button>
+  // <button class="card green" data-value="2">2</button>
+  // <button class="card blue" data-value="3">3</button>
+  // <button class="card red" data-value="4">4</button>
+  // <button class="card yellow" data-value="5">5</button>
+  // <button class="card green" data-value="6">6</button>
+  // <button class="card blue" data-value="7">7</button>
+  // <button class="card red" data-value="8">8</button>
+  // <button class="card yellow" data-value="9">9</button>
+  // <button class="card green skip" data-value="skip"></button>
+  // <button class="card blue reverse" data-value="reverse"></button>
+  // <button class="card red draw2" data-value="draw2"></button>
+  // <button class="card black wild" data-value="wild"></button>
+  // <button class="card black wilddrawfour" data-value="wilddrawfour"></button>
+  // CreateCard("0", "red");
+
+  // const cards = [...document.querySelectorAll(".card")];
+
+  // cards.forEach((item) => {
+  //   item.onclick = () => {
+  //     if (item.dataset.selected != null) {
+  //       item.removeAttribute("data-selected");
+  //     } else {
+  //       cards.forEach((item) => {
+  //         item.removeAttribute("data-selected");
+  //       });
+  //       item.setAttribute("data-selected", "");
+  //     }
+  //   };
+  // });
+}
+
+window.onkeyup = (e) => {
+  if (e.code != "KeyX" && e.code != "KeyY") return;
+
+  let dados = {};
+  if (e.code == "KeyX") {
+    dados = {
+      type: "users",
+      content: {
+        type: "getusers",
+        content: "nothing",
+      },
+    };
+  }
+  if (e.code == "KeyY") {
+    dados = {
+      type: "gamenow",
+      content: {
+        type: "gamenow",
+        content: "gamenow",
+      },
+    };
+  }
+
+  ws.send(JSON.stringify(dados));
+  SendWS();
+};
+
+// let types = [
+//   "0",
+//   "1",
+//   "2",
+//   "3",
+//   "4",
+//   "5",
+//   "6",
+//   "7",
+//   "8",
+//   "9",
+//   "skip",
+//   "reverse",
+//   "draw2",
+//   "wild",
+//   "wilddrawfour",
+// ];
+
+// let colors = ["red", "yellow", "green", "blue"];
+// for (let i = 0; i < 7; i++) {
+//   let type = types[RandomNumber(0, types.length)];
+//   let color = 0;
+//   if (type < 10 || !(type == "wild" || type == "wilddrawfour")) {
+//     color = colors[RandomNumber(0, 4)];
+//   } else {
+//     color = "black";
+//   }
+
+//   // setTimeout(() => {
+//   CreateCard(type, color);
+//   // }, i * 10 + RandomNumber(0, i * 10));
+// }
+
+// CreateCard("0", "red");
+// CreateCard("0", "yellow");
+// CreateCard("0", "green");
+// CreateCard("0", "blue");
+// CreateCard("skip", "red");
+// CreateCard("reverse", "yellow");
+// CreateCard("draw2", "green");
+// CreateCard("wild", "black");
+// CreateCard("wilddrawfour", "black");

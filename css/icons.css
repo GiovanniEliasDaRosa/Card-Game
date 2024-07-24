@@ -22,3 +22,7 @@
 .icons.up::before {
   content: "\f151";
 }
+
+.icons.user::before {
+  content: "\f007";
+}
