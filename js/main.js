@@ -491,6 +491,24 @@ window.onkeyup = (e) => {
   SendWS();
 };
 
+let root = document.querySelector(":root");
+
+window.onresize = () => {
+  ScaleCards();
+};
+
+ScaleCards();
+
+function ScaleCards() {
+  let prefered = window.innerWidth;
+  if (window.innerHeight < window.innerWidth) {
+    prefered = window.innerHeight;
+  }
+  let result = Clamp(prefered / 2 / 64, 0, 5);
+  console.log(window.innerWidth, result);
+  root.style = `--scale: ${result}`;
+}
+
 // let types = [
 //   "0",
 //   "1",

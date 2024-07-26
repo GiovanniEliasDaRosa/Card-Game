@@ -42,7 +42,7 @@ function generateNewDeck()
     $coloridx++;
   }
 
-  $specialCards = ['skip', 'reverse'];
+  $specialCards = ['skip', 'reverse']; // draw2
 
   // create 2x 'special cards' each color
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
