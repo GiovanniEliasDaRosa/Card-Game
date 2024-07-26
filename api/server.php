@@ -73,6 +73,13 @@ function generateNewDeck()
 function getGameInfo()
 {
   $theircardsarray = array();
+
+  // Users that won
+  for ($i = 0; $i < count($GLOBALS['usersthatwon']); $i++) {
+    $result = [$GLOBALS['usersthatwon'][$i], 0];
+    array_push($theircardsarray, $result);
+  }
+
   for ($i = 0; $i < count($GLOBALS['game']); $i++) {
     $currentUser = $GLOBALS['game'][$i];
     $result = array();

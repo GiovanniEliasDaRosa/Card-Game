@@ -168,11 +168,31 @@ testHUDdown */
 }
 
 .otherplayers.you {
-  background-color: hsla(0, 100%, 50%, 0.2);
+  background-color: hsla(0, 50%, 50%, 0.5);
+  box-shadow: 0 0 0.1em hsla(0, 0%, 100%, 0.5);
 }
 
 .otherplayers.turn {
-  background-color: hsla(71, 100%, 50%, 0.5);
+  background-color: hsla(50, 50%, 50%, 0.5);
+  box-shadow: 0 0 0.4em white;
+}
+
+.otherplayers.turn.you {
+  --color1: hsla(0, 50%, 50%, 0.5);
+  --color2: hsla(50, 50%, 50%, 0.5);
+  background: linear-gradient(
+    -45deg,
+    var(--color1) 0%,
+    var(--color2) 25%,
+    var(--color1) 50%,
+    var(--color2) 75%,
+    var(--color1) 100%
+  );
+  box-shadow: 0 0 0.4em white;
+}
+
+.otherplayers.won {
+  opacity: 0.5;
 }
 
 .otherplayername {

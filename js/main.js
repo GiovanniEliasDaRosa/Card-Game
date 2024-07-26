@@ -5,6 +5,7 @@ let playCard = document.querySelector("#playCard");
 let userNameElement = document.querySelector("#userName");
 let otherplayers = document.querySelector("#otherplayers");
 let getMoreCard = document.querySelector("#getMoreCard");
+let table = document.querySelector("#table");
 let currenttablecard = document.querySelector("#currenttablecard");
 let loadingspinner = document.querySelector(".loadingspinner");
 
@@ -17,6 +18,8 @@ let testHUDplayers = document.querySelector("#testHUDplayers");
 
 let ws = null;
 let activeUsers = 0;
+let gamealreadyrunning = false;
+// let secondconfirm = tru;
 
 // Disable(getMoreCard, false);
 // Disable(playCard, false);
@@ -44,6 +47,29 @@ fetch("fetchable/loadws.php", {
 
 function StartWebSocket(serverADDR) {
   if (userName == null) return;
+
+  if (serverADDR == "127.0.0.1") {
+    let startGame = document.createElement("button");
+    startGame.classList = "button";
+    startGame.id = "startGame";
+    startGame.textContent = "Começar jogo";
+
+    table.appendChild(startGame);
+    startGame.onclick = () => {
+      let dados = {
+        type: "game",
+        content: {
+          type: "startgame",
+          content: {
+            user: userName,
+          },
+        },
+      };
+      ws.send(JSON.stringify(dados));
+      SendWS();
+      startGame.remove();
+    };
+  }
 
   ws = new WebSocket(`ws://${serverADDR}:8080/`);
   ws.onopen = (e) => {
@@ -74,6 +100,8 @@ function StartWebSocket(serverADDR) {
     // console.log(response.data);
     let result = JSON.parse(response.data);
     // console.log(result.type, result);
+    console.log(result.started);
+
     if (result.type == "users") {
       activeUsers = result.usersactive;
       UpdateActiveUsers();
@@ -92,6 +120,9 @@ function StartWebSocket(serverADDR) {
       for (let i = 0; i < theircards.length; i++) {
         const currentUser = theircards[i];
         let classlist = "";
+        if (currentUser[1] == 0) {
+          classlist += "won ";
+        }
         if (currentUser[0] == userName) {
           classlist += "you ";
         }
@@ -99,7 +130,6 @@ function StartWebSocket(serverADDR) {
           classlist += "turn ";
 
           if (currentUser[0] == userName) {
-            console.log(turnhasgotnewcard);
             if (turnhasgotnewcard) {
               getMoreCard.innerText = "Passar vez";
             } else {
@@ -119,15 +149,60 @@ function StartWebSocket(serverADDR) {
     }
 
     if (result.type != "game") {
-      chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
-      let chatmessages = [...chatMessage.children];
-      let lastchat = chatmessages[chatmessages.length - 1];
-      lastchat.scrollIntoView({ behavior: "smooth" });
+      if (result.started != null) {
+        console.warn("GAME COMECO?");
+      }
+      if (result.content != undefined) {
+        chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
+        let chatmessages = [...chatMessage.children];
+        let lastchat = chatmessages[chatmessages.length - 1];
+        lastchat.scrollIntoView({ behavior: "smooth" });
+      }
+
       GetWS();
       return;
     }
 
     console.log("GAME ONLY");
+    if (result.started != null) {
+      console.warn("COMECO");
+      gamealreadyrunning = true;
+      let startGameButton = document.querySelector("#startGame");
+
+      if (startGameButton != null) {
+        startGameButton.remove();
+      }
+
+      dados = {
+        type: "game",
+        content: {
+          type: "getInfo",
+          content: userName,
+        },
+      };
+      ws.send(JSON.stringify(dados));
+      return;
+    }
+
+    console.log(result);
+    if (gamealreadyrunning && result.gameendend) {
+      let whowon = result.whowon;
+      console.log(whowon);
+      console.log("Game Endend");
+
+      let resultedtext = "";
+      for (let i = 0; i < whowon.length; i++) {
+        if (i < whowon.length - 1) {
+          resultedtext += whowon[i] + ", ";
+        } else {
+          resultedtext += whowon[i];
+        }
+      }
+      alert("Os ganhadores foram " + resultedtext);
+
+      gamealreadyrunning = false;
+      return;
+    }
 
     if (result.who != userName) {
       console.log("other user", result.who);
@@ -140,7 +215,6 @@ function StartWebSocket(serverADDR) {
 
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
-      console.log(card);
       CreateCard(card.value, card.color);
     }
   };
@@ -261,6 +335,11 @@ getMoreCard.onclick = () => {
   };
   ws.send(JSON.stringify(dados));
   SendWS();
+
+  Disable(getMoreCard, false);
+  setTimeout(() => {
+    Enable(getMoreCard);
+  }, 1000);
 };
 
 message.onkeyup = (e) => {
