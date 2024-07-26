@@ -42,19 +42,19 @@ function generateNewDeck()
     $coloridx++;
   }
 
-  // $specialCards = ['skip', 'reverse', 'draw2'];
+  $specialCards = ['skip', 'reverse'];
 
-  // // create 2x 'special cards' each color
-  // for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-  //   for ($currentSpecialCard = 0; $currentSpecialCard < 3; $currentSpecialCard++) {
-  //     for ($quant = 0; $quant < 2; $quant++) {
-  //       $value = $specialCards[$currentSpecialCard];
-  //       $color = $colors[$currentcolor];
-  //       $card = '{"value": "' . $value . '","color": "' . $color . '"}';
-  //       array_push($deck, json_encode($card));
-  //     }
-  //   }
-  // }
+  // create 2x 'special cards' each color
+  for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
+    for ($currentSpecialCard = 0; $currentSpecialCard < 2; $currentSpecialCard++) {
+      for ($quant = 0; $quant < 2; $quant++) {
+        $value = $specialCards[$currentSpecialCard];
+        $color = $colors[$currentcolor];
+        $card = '{"value": "' . $value . '","color": "' . $color . '"}';
+        array_push($deck, json_decode($card));
+      }
+    }
+  }
 
   // $blackCards = ['wild', 'wilddrawfour'];
 
@@ -63,8 +63,8 @@ function generateNewDeck()
   //   for ($quant = 0; $quant < 4; $quant++) {
   //     $value = $blackCards[$currentBlackCard];
   //     $color = 'black';
-  //       $card = '{"value": "' . $value . '","color": "' . $color . '"}';
-  //     array_push($deck, json_encode($card));
+  //     $card = '{"value": "' . $value . '","color": "' . $color . '"}';
+  //     array_push($deck, json_decode($card));
   //   }
   // }
   return $deck;
@@ -94,13 +94,22 @@ function getGameInfo()
 
 function saveGame()
 {
+  $gameFile = new stdClass();
+  $gameFile->game = json_encode($GLOBALS['game']);
+  $gameFile->turn = $GLOBALS['turn'];
+  $gameFile->deck = json_encode($GLOBALS['deck']);
+  $gameFile->tablecard = json_encode($GLOBALS['tablecard']);
+  $gameFile->gamestarted = json_encode($GLOBALS['gamestarted']);
+  $gameFile->gameendend = json_encode($GLOBALS['gameendend']);
+  $gameFile->usersthatwon = json_encode($GLOBALS['usersthatwon']);
+
+  $gameFile->turnhasplayed = $GLOBALS['turnhasplayed'];
+  $gameFile->turnhasgotnewcard = $GLOBALS['turnhasgotnewcard'];
+  $gameFile->turn = $GLOBALS['turn'];
+  $gameFile->direction = $GLOBALS['direction'];
+
   $gamefile = fopen("game.json", "w");
-  $encodedGame = json_encode($GLOBALS['game']);
-  fwrite($gamefile, $encodedGame . "\r\n");
-  fwrite($gamefile, $GLOBALS['turnhasplayed'] . "\r\n");
-  fwrite($gamefile, $GLOBALS['turn'] . "\r\n");
-  fwrite($gamefile, json_encode($GLOBALS['deck']) . "\r\n");
-  fwrite($gamefile, json_encode($GLOBALS['tablecard']) . "\r\n");
+  fwrite($gamefile, json_encode($gameFile));
   fclose($gamefile);
 }
 
@@ -120,32 +129,30 @@ function getOneCardFromDeck()
 
 function passTurn()
 {
-  $nextturn = -1;
-
+  $nextturn = -3;
   for ($i = 0; $i < count($GLOBALS['game']); $i++) {
     $currentuser = $GLOBALS['game'][$i];
 
-    if ($nextturn == $i) {
-      $GLOBALS['turnhasplayed'] = false;
-      $GLOBALS['turnhasgotnewcard'] = false;
-      $GLOBALS['turn'] = $currentuser->user;
-      break;
-    }
-
     if ($currentuser->user == $GLOBALS['turn']) {
-      $nextturn = $i + 1;
+      $nextturn = $i + $GLOBALS['direction'];
 
-      //passed the array
       if ($nextturn > count($GLOBALS['game']) - 1) {
         $nextturn = 0;
-
-        $GLOBALS['turnhasplayed'] = false;
-        $GLOBALS['turnhasgotnewcard'] = false;
-        $GLOBALS['turn'] = $GLOBALS['game'][0]->user;
+        break;
+      } else if ($nextturn < 0) {
+        $nextturn = count($GLOBALS['game']) - 1;
         break;
       }
     }
   }
+
+  if ($nextturn < -1 || $nextturn > count($GLOBALS['game']) - 1) {
+    echo "--\n<ERROR> $nextturn\n--\n";
+  }
+
+  $GLOBALS['turnhasplayed'] = false;
+  $GLOBALS['turnhasgotnewcard'] = false;
+  $GLOBALS['turn'] = $GLOBALS['game'][$nextturn]->user;
 
   return getGameInfo();
 }

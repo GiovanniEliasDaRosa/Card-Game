@@ -67,7 +67,6 @@ function StartWebSocket(serverADDR) {
       };
       ws.send(JSON.stringify(dados));
       SendWS();
-      startGame.remove();
     };
   }
 
@@ -130,12 +129,14 @@ function StartWebSocket(serverADDR) {
           classlist += "turn ";
 
           if (currentUser[0] == userName) {
+            document.body.setAttribute("data-myturn", "");
             if (turnhasgotnewcard) {
               getMoreCard.innerText = "Passar vez";
             } else {
               getMoreCard.innerText = "Pescar";
             }
           } else {
+            document.body.removeAttribute("data-myturn");
             getMoreCard.innerText = "Pescar";
           }
         }
@@ -150,7 +151,7 @@ function StartWebSocket(serverADDR) {
 
     if (result.type != "game") {
       if (result.started != null) {
-        console.warn("GAME COMECO?");
+        startGame.remove();
       }
       if (result.content != undefined) {
         chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
@@ -198,7 +199,33 @@ function StartWebSocket(serverADDR) {
           resultedtext += whowon[i];
         }
       }
-      alert("Os ganhadores foram " + resultedtext);
+
+      setTimeout(() => {
+        alert("Os ganhadores foram " + resultedtext);
+      }, 500);
+
+      if (serverADDR == "127.0.0.1") {
+        let startGame = document.createElement("button");
+        startGame.classList = "button";
+        startGame.id = "startGame";
+        startGame.textContent = "Começar jogo";
+
+        table.appendChild(startGame);
+        startGame.onclick = () => {
+          let dados = {
+            type: "game",
+            content: {
+              type: "startgame",
+              content: {
+                user: userName,
+              },
+            },
+          };
+          ws.send(JSON.stringify(dados));
+          SendWS();
+          startGame.remove();
+        };
+      }
 
       gamealreadyrunning = false;
       return;
@@ -364,13 +391,9 @@ function CreateCard(type, color, where = null) {
     newCard.className = `card ${color} ${type}`;
   }
 
-  if (
-    type == "skip" ||
-    type == "reverse" ||
-    type == "draw2" ||
-    type == "wild" ||
-    type == "wilddrawfour"
-  ) {
+  // type == "skip" ||
+  // type == "reverse" ||
+  if (type == "draw2" || type == "wild" || type == "wilddrawfour") {
     Disable(newCard, false);
   }
 

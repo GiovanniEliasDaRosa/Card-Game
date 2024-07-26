@@ -8,8 +8,6 @@ use Ratchet\ConnectionInterface;
 use Ratchet\WebSocket\MessageComponentInterface;
 use stdClass;
 
-// use stdClass;
-
 $GLOBALS['gameendend'] = false;
 $GLOBALS['gamestarted'] = false;
 $GLOBALS['searchname'] = '';
@@ -18,9 +16,11 @@ $GLOBALS['usersthatwon'] = array();
 $GLOBALS['turnhasplayed'] = false;
 $GLOBALS['turnhasgotnewcard'] = false;
 $GLOBALS['turn'] = 'giovanni';
+$GLOBALS['direction'] = 1;
 
 $GLOBALS['deck'] = generateNewDeck();
 $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
+$GLOBALS['game'] = array();
 
 // $handle = fopen("game.json", "r");
 // while (($buffer = fgets($handle, 4096)) !== false) {
@@ -31,9 +31,6 @@ $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
 //   return;
 // }
 // fclose($handle);
-
-
-$GLOBALS['game'] = array();
 
 class system implements MessageComponentInterface
 {
@@ -148,8 +145,27 @@ class system implements MessageComponentInterface
       $contentPass = $content->content; // content
 
       if ($contenttype == 'startgame') {
+        $user = $contentPass->user;
+        if (count($GLOBALS['usersonline']) < 2) {
+          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Quer começar o jogo mas só tem um usuário ativo</p>";
+          $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+          $from->send($sendback);
+          return;
+        }
         $GLOBALS['gamestarted'] = true;
-        echo "Starting game for: " . json_encode($GLOBALS['usersonline']) .  "-(" . count($GLOBALS['usersonline']) . " users)\n";
+        $GLOBALS['gameendend'] = false;
+        $GLOBALS['searchname'] = '';
+        $GLOBALS['usersthatwon'] = array();
+        $GLOBALS['turnhasplayed'] = false;
+        $GLOBALS['turnhasgotnewcard'] = false;
+        $GLOBALS['turn'] = 'giovanni';
+        $GLOBALS['direction'] = 1;
+
+        $GLOBALS['deck'] = generateNewDeck();
+        $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
+        $GLOBALS['game'] = array();
+
+        echo "Starting new game for: " . json_encode($GLOBALS['usersonline']) .  "-(" . count($GLOBALS['usersonline']) . " users)\n";
 
         for ($i = 0; $i < count($GLOBALS['usersonline']); $i++) {
           $randomcards = [];
@@ -188,7 +204,6 @@ class system implements MessageComponentInterface
           }
         }
 
-        $user = $contentPass->user;
         $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Começou o jogo</p>";
         $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
         $myfile = fopen("chat.txt", "a");
@@ -341,22 +356,56 @@ class system implements MessageComponentInterface
                 $currentcardcolor = $currentCard->color;
                 $cardontablevalue = $GLOBALS['tablecard']->value;
                 $cardontablecolor = $GLOBALS['tablecard']->color;
+                // if (
+                //   $cardontablevalue == "skip" ||
+                //   $cardontablevalue == "reverse" ||
+                //   $cardontablevalue == "draw2" ||
+                //   $cardontablevalue == "wild" ||
+                //   $cardontablevalue == "wilddrawfour"
+                // ) {
+                //   // special cards ONTABLE
+                // } else 
                 if (
-                  $cardontablevalue == "skip" ||
-                  $cardontablevalue == "reverse" ||
-                  $cardontablevalue == "draw2" ||
-                  $cardontablevalue == "wild" ||
-                  $cardontablevalue == "wilddrawfour"
-                ) {
-                  // special cards ONTABLE
-                } else if (
                   $currentcardvalue == "skip" ||
                   $currentcardvalue == "reverse" ||
-                  $currentcardvalue == "draw2" ||
-                  $currentcardvalue == "wild" ||
-                  $currentcardvalue == "wilddrawfour"
+                  $currentcardvalue == "draw2"
                 ) {
+                  if (
+                    $cardontablevalue != "skip" &&
+                    $cardontablevalue != "reverse" &&
+                    $cardontablevalue != "draw2"
+                  ) {
+                    if ($currentcardcolor != $cardontablecolor) {
+                      break;
+                    }
+                  }
+
+                  $canplay = true;
+                  $playerpos = $i;
+                  $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
+                  echo json_encode($cardplayed) . '|';
+                  $GLOBALS['turnhasplayed'] = true;
+                  array_push($GLOBALS['deck'], $GLOBALS['tablecard']);
+
+                  // echo json_encode($cardplayed);
+                  $GLOBALS['tablecard'] = $cardplayed[0];
+
+                  if ($currentcardvalue == "skip") {
+                    $this->sendAll(passTurn());
+                  } else if ($currentcardvalue == "reverse") {
+                    $GLOBALS['direction'] = $GLOBALS['direction'] == 1 ? -1 : 1;
+                  }
+
+                  //   $currentcardvalue == "skip" ||
+                  //   $currentcardvalue == "reverse" ||
+                  //   $currentcardvalue == "draw2" ||
+                  //   $currentcardvalue == "wild" ||
+                  //   $currentcardvalue == "wilddrawfour"
+                  // ) {
+
+
                   // special cards on hand
+                  break;
                 } else {
                   // $currentcardvalue ||
                   // $currentcardcolor ||
@@ -369,16 +418,29 @@ class system implements MessageComponentInterface
                   $canplay = true;
                   $playerpos = $i;
                   $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
+                  echo json_encode($cardplayed) . '|';
                   $GLOBALS['turnhasplayed'] = true;
                   array_push($GLOBALS['deck'], $GLOBALS['tablecard']);
 
-                  echo json_encode($cardplayed);
                   $GLOBALS['tablecard'] = $cardplayed[0];
+                  break;
                 }
               }
             }
+
+            if ($canplay) {
+              break;
+            }
           }
         }
+
+        $myfile = fopen("debug.json", "a");
+        fwrite($myfile, "{'tablecard': '" . json_encode($GLOBALS['tablecard']) . "', ");
+        fwrite($myfile, "'isnull': '" . ($GLOBALS['tablecard'] == null) . "', ");
+        fwrite($myfile, "'value': '" . $GLOBALS['tablecard']->value . "', ");
+        fwrite($myfile, "'color': '" . $GLOBALS['tablecard']->color . "'},\r\n");
+        fwrite($myfile, "'playerposcards': '" . json_encode($GLOBALS['game'][$playerpos]->cards) . "'},\r\n");
+        fclose($myfile);
 
         $canheplay = $canplay == true ? 'YES' : 'NO';
         $currentcardvalue = $GLOBALS['tablecard']->value;
@@ -392,7 +454,6 @@ class system implements MessageComponentInterface
         fclose($myfile);
 
         $this->sendAll($sendback);
-
         if (!$canplay) return;
 
         if (count($GLOBALS['game'][$playerpos]->cards) == 0) {

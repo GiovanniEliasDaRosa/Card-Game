@@ -1,5 +1,14 @@
 <?php
 include('dumpper/dumpper.php');
+$GLOBALS['direction'] = 1;
+
+dump($GLOBALS['direction']);
+$GLOBALS['direction'] = $GLOBALS['direction'] == 1 ? -1 : 1;
+dump($GLOBALS['direction']);
+$GLOBALS['direction'] = $GLOBALS['direction'] == 1 ? -1 : 1;
+dump($GLOBALS['direction']);
+
+exit();
 
 $GLOBALS['game'] = array();
 $json = '{

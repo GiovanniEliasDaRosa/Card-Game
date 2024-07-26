@@ -1,3 +1,8 @@
+[data-myturn],
+[data-myturn=""] {
+  box-shadow: inset 0 0 0 0.5em white;
+}
+
 #uno {
   position: relative;
   width: 100%;
@@ -55,6 +60,7 @@ testHUDdown */
   flex-wrap: wrap;
   gap: 0.5em;
   overflow: auto;
+  padding: 0.5em;
 }
 
 .card {
