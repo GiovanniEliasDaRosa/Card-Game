@@ -164,6 +164,14 @@ function passTurn()
 // new SistemaChat(): classe criada para lidar com eventos relacionados ao WebSocket, como receber mensagens, abrir conexões, fechar conexões, entre outras funcionalidades
 // 8080: porta em que o servidor WebSocket será executado
 
+// Create needed files
+$wantedfiles = ['chat.txt', 'debug.json', 'game.json', 'users.txt', 'usersonline.txt'];
+foreach ($wantedfiles as $file) {
+  $myfile = fopen("$file", "w");
+  fclose($myfile);
+}
+
+
 $myfile = fopen("chat.txt", "w");
 fclose($myfile);
 
