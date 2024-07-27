@@ -430,10 +430,6 @@ function CreateCard(type, color, where = null) {
     newCard.className = `card ${color} ${type}`;
   }
 
-  if (type == "wilddrawfour") {
-    Disable(newCard, false);
-  }
-
   if (where == null) {
     newCard.onclick = () => {
       if (newCard.dataset.selected != null) {
@@ -495,6 +491,7 @@ popupselectcolorPlaySelected.onclick = () => {
     },
   };
   ws.send(JSON.stringify(dados));
+  selected.removeAttribute("data-selected");
   return;
 };
 

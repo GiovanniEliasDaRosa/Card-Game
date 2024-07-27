@@ -26,27 +26,27 @@ function generateNewDeck()
     $color = $colors[$coloridx];
     $card = '{"value": "' . $value . '","color": "' . $color . '"}';
     array_push($deck, json_decode($card));
-    array_push($deck, json_decode($card));
   }
 
   // create 2x 1-9 cards, 2 each color
-  $coloridx = 0;
-  for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-    for ($i = 1; $i < 10; $i++) {
-      for ($quant = 0; $quant < 2; $quant++) {
-        $value = $i;
-        $color = $colors[$coloridx];
-        $card = '{"value": "' . $value . '","color": "' . $color . '"}';
-        array_push($deck, json_decode($card));
-      }
-    }
-    $coloridx++;
-  }
+  // $coloridx = 0;
+  // for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
+  //   for ($i = 1; $i < 10; $i++) {
+  //     for ($quant = 0; $quant < 2; $quant++) {
+  //       $value = $i;
+  //       $color = $colors[$coloridx];
+  //       $card = '{"value": "' . $value . '","color": "' . $color . '"}';
+  //       array_push($deck, json_decode($card));
+  //     }
+  //   }
+  //   $coloridx++;
+  // }
 
   // create 2x 'special cards' each color
-  $specialCards = ['skip', 'reverse', 'draw2'];
+  // $specialCards = ['skip', 'reverse', 'draw2'];
+  $specialCards = ['draw2'];
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-    for ($currentSpecialCard = 0; $currentSpecialCard < 3; $currentSpecialCard++) {
+    for ($currentSpecialCard = 0; $currentSpecialCard < 1; $currentSpecialCard++) {
       for ($quant = 0; $quant < 2; $quant++) {
         $value = $specialCards[$currentSpecialCard];
         $color = $colors[$currentcolor];
@@ -57,7 +57,7 @@ function generateNewDeck()
   }
 
   // $blackCards = ['wild', 'wilddrawfour'];
-  $blackCards = ['wild'];
+  $blackCards = ['wilddrawfour'];
 
   // create 4x 'black cards'
   for ($currentBlackCard = 0; $currentBlackCard < 1; $currentBlackCard++) {
@@ -167,9 +167,19 @@ function passTurn()
 
     for ($i = 0; $i < count($nextTurnCards); $i++) {
       $currentCard = $nextTurnCards[$i];
-      if ($currentCard->value == 'draw2' || $currentCard->value == 'wilddrawfour') {
+      if ($currentCard->value == 'wilddrawfour') {
         $canIncreaseCardGetCount = true;
         break;
+      } else if ($currentCard->value == 'draw2') {
+        if ($GLOBALS['selectedacolor']) {
+          if ($GLOBALS['selectedcolor'] == $currentCard->color) {
+            $canIncreaseCardGetCount = true;
+            break;
+          }
+        } else {
+          $canIncreaseCardGetCount = true;
+          break;
+        }
       }
     }
 

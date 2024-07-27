@@ -174,14 +174,31 @@ class system implements MessageComponentInterface
         $GLOBALS['selectcolor'] = false;
 
         $GLOBALS['deck'] = generateNewDeck();
-        $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
+        $GLOBALS['tablecard'] = null;
         $GLOBALS['game'] = array();
 
-        echo "Starting new game for: " . json_encode($GLOBALS['usersonline']) .  "-(" . count($GLOBALS['usersonline']) . " users)\n";
+
+        $quantusers =  count($GLOBALS['usersonline']) * 2;
+        if ((count($GLOBALS['deck']) - $quantusers) < 2) {
+          $olddeck = $GLOBALS['deck'];
+          $GLOBALS['deck'] = generateNewDeck();
+          for ($olddeckpos = 0; $olddeckpos < count($olddeck); $olddeckpos++) {
+            array_push($GLOBALS['deck'], $olddeck[$olddeckpos]);
+          }
+
+          $sendbackcontent = "<p><span class='game'>Game</span>: ADDED NEW CARDS!</p>";
+          $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+          $myfile = fopen("chat.txt", "a");
+          fwrite($myfile, $sendbackcontent . "\r\n");
+          fclose($myfile);
+          $this->sendAll($sendback);
+        }
+
+        echo "Starting new game for: " . json_encode($GLOBALS['usersonline']) .  "-(" . count($GLOBALS['usersonline']) . " users) '" . count($GLOBALS['deck']) . "'cards\n";
 
         for ($i = 0; $i < count($GLOBALS['usersonline']); $i++) {
           $randomcards = [];
-          for ($card = 0; $card < 7; $card++) {
+          for ($card = 0; $card < 2; $card++) {
             array_push($randomcards, getOneCardFromDeck());
           }
           $newUser = new stdClass();
@@ -198,6 +215,7 @@ class system implements MessageComponentInterface
         $GLOBALS['turn'] = $GLOBALS['usersonline'][0];
 
         $validcardgot = false;
+        $trys = 0;
         while (!$validcardgot) {
           $pos = random_int(0, (count($GLOBALS['deck']) - 1));
           $cardgot = $GLOBALS['deck'][$pos];
@@ -213,6 +231,22 @@ class system implements MessageComponentInterface
             $cardgot = array_splice($GLOBALS['deck'], $pos, 1);
             $GLOBALS['tablecard'] =  $cardgot[0];
             $validcardgot = true;
+          }
+
+          $trys++;
+          if ($trys == 50) {
+            $olddeck = $GLOBALS['deck'];
+            $GLOBALS['deck'] = generateNewDeck();
+            for ($olddeckpos = 0; $olddeckpos < count($olddeck); $olddeckpos++) {
+              array_push($GLOBALS['deck'], $olddeck[$olddeckpos]);
+            }
+
+            $sendbackcontent = "<p><span class='game'>Game</span>: ADDED NEW CARDS!</p>";
+            $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+            $myfile = fopen("chat.txt", "a");
+            fwrite($myfile, $sendbackcontent . "\r\n");
+            fclose($myfile);
+            $this->sendAll($sendback);
           }
         }
 
@@ -268,7 +302,7 @@ class system implements MessageComponentInterface
       if ($contenttype == 'wanttogetcard') {
         if (
           ($GLOBALS['tablecard']->value == 'draw2' || $GLOBALS['tablecard']->value == 'wilddrawfour') &&
-          ($GLOBALS['turnhasplayed'] || $GLOBALS['selectedacolor'])
+          ($GLOBALS['turnhasplayed'] && $GLOBALS['selectedacolor'])
         ) {
           $sendbackcontent = "<p><span class='game'>Game</span>: Você não consegue pescar agora, jogue uma carta</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
@@ -306,10 +340,7 @@ class system implements MessageComponentInterface
               $myfile = fopen("chat.txt", "a");
               fwrite($myfile, $sendbackcontent . "\r\n");
               fclose($myfile);
-
-              foreach ($this->cliente as $cliente) {
-                $cliente->send($sendback);
-              }
+              $this->sendAll($sendback);
             }
 
             array_push($GLOBALS['game'][$i]->cards, getOneCardFromDeck());
@@ -398,6 +429,10 @@ class system implements MessageComponentInterface
                   $GLOBALS['selectcolor'] = true;
                   $GLOBALS['selectedacolor'] = false;
                   $playedColorSelector = true;
+
+                  if ($currentcardvalue == 'wilddrawfour') {
+                    $GLOBALS['getcardcount'] += 4;
+                  }
                   break;
                 } else if (
                   $currentcardvalue == "skip" ||
@@ -487,8 +522,7 @@ class system implements MessageComponentInterface
 
         $this->sendAll($sendback);
         if (!$canplay) return;
-
-        if ($GLOBALS['selectedacolor']) {
+        if ($GLOBALS['selectedacolor'] && $GLOBALS['tablecard']->value == 'wild') {
           $GLOBALS['whoisselecting'] = '';
           $GLOBALS['selectedcolor'] = '';
           $GLOBALS['selectedacolor'] = false;
@@ -554,7 +588,6 @@ class system implements MessageComponentInterface
         $GLOBALS['selectcolor'] = false;
         $sendback = '{"type": "selectcolor","content":"close"}';
         $from->send($sendback);
-
         $this->sendAll(passTurn());
       }
 
