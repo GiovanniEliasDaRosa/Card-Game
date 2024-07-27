@@ -72,8 +72,6 @@ $GLOBALS['turn'] = 'firefox';
 
 if ($GLOBALS['turnhasplayed']) {
   $nextturn = -1;
-  echo "Has played, pass turn";
-
   for ($i = 0; $i < count($GLOBALS['game']); $i++) {
     $currentuser = $GLOBALS['game'][$i];
 

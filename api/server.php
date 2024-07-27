@@ -26,6 +26,7 @@ function generateNewDeck()
     $color = $colors[$coloridx];
     $card = '{"value": "' . $value . '","color": "' . $color . '"}';
     array_push($deck, json_decode($card));
+    array_push($deck, json_decode($card));
   }
 
   // create 2x 1-9 cards, 2 each color
@@ -42,11 +43,11 @@ function generateNewDeck()
     $coloridx++;
   }
 
-  $specialCards = ['skip', 'reverse']; // draw2
+  $specialCards = ['skip', 'reverse', 'draw2'];
 
   // create 2x 'special cards' each color
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-    for ($currentSpecialCard = 0; $currentSpecialCard < 2; $currentSpecialCard++) {
+    for ($currentSpecialCard = 0; $currentSpecialCard < 3; $currentSpecialCard++) {
       for ($quant = 0; $quant < 2; $quant++) {
         $value = $specialCards[$currentSpecialCard];
         $color = $colors[$currentcolor];
@@ -70,7 +71,7 @@ function generateNewDeck()
   return $deck;
 }
 
-function getGameInfo()
+function getGameInfo($type = null)
 {
   $theircardsarray = array();
 
@@ -88,7 +89,14 @@ function getGameInfo()
   }
   $turnhasgotnewcard = $GLOBALS['turnhasgotnewcard'] == true ? "true" : "false";
   $theircards = str_replace('"', '\"', json_encode($theircardsarray));
-  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard . '}';
+  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard;
+
+  if ($type == 'userloaded') {
+    $sendbackuser .= ', "userloaded": true}';
+  } else {
+    $sendbackuser .= '}';
+  }
+
   return $sendbackuser;
 }
 
@@ -127,7 +135,7 @@ function getOneCardFromDeck()
   return $cardgot[0];
 }
 
-function passTurn()
+function reallyPassTurn()
 {
   $nextturn = -3;
   for ($i = 0; $i < count($GLOBALS['game']); $i++) {
@@ -146,15 +154,61 @@ function passTurn()
     }
   }
 
-  if ($nextturn < -1 || $nextturn > count($GLOBALS['game']) - 1) {
-    echo "--\n<ERROR> $nextturn\n--\n";
+  return $nextturn;
+}
+
+function passTurn()
+{
+  $nextturn = reallyPassTurn();
+
+  if ($GLOBALS['getcardcount'] > 0) {
+    $canIncreaseCardGetCount = false;
+    $nextTurnCards = $GLOBALS['game'][$nextturn]->cards;
+
+    for ($i = 0; $i < count($nextTurnCards); $i++) {
+      $currentCard = $nextTurnCards[$i];
+      if ($currentCard->value == 'draw2' || $currentCard->value == 'wilddrawfour') {
+        $canIncreaseCardGetCount = true;
+        break;
+      }
+    }
+
+    if (!$canIncreaseCardGetCount) {
+      if (count($GLOBALS['deck']) - $GLOBALS['getcardcount'] < 2) {
+        $olddeck = $GLOBALS['deck'];
+        $GLOBALS['deck'] = generateNewDeck();
+        for ($olddeckpos = 0; $olddeckpos < count($olddeck); $olddeckpos++) {
+          array_push($GLOBALS['deck'], $olddeck[$olddeckpos]);
+        }
+
+        // $sendbackcontent = "<p><span class='game'>Game</span>: ADDED NEW CARDS!</p>";
+        // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+        // $myfile = fopen("chat.txt", "a");
+        // fwrite($myfile, $sendbackcontent . "\r\n");
+        // fclose($myfile);
+
+        // foreach ($this->cliente as $cliente) {
+        //   $cliente->send($sendback);
+        // }
+      }
+
+      for ($i = 0; $i < $GLOBALS['getcardcount']; $i++) {
+        array_push($GLOBALS['game'][$nextturn]->cards, getOneCardFromDeck());
+      }
+
+      $GLOBALS['getcardcount'] = 0;
+      $GLOBALS['turnhasplayed'] = false;
+      $GLOBALS['turnhasgotnewcard'] = false;
+      $GLOBALS['turn'] = $GLOBALS['game'][$nextturn]->user;
+      $nextturn = reallyPassTurn();
+    }
   }
 
   $GLOBALS['turnhasplayed'] = false;
   $GLOBALS['turnhasgotnewcard'] = false;
   $GLOBALS['turn'] = $GLOBALS['game'][$nextturn]->user;
 
-  return getGameInfo();
+  return getGameInfo('userloaded');
 }
 
 // $server: variável que irá armazenar a instância do servidor WebSocket.
@@ -166,16 +220,28 @@ function passTurn()
 
 // Create needed files
 $wantedfiles = ['chat.txt', 'debug.json', 'game.json', 'users.txt', 'usersonline.txt'];
+$createdfiles = 0;
 foreach ($wantedfiles as $file) {
-  $myfile = fopen("$file", "w");
-  fclose($myfile);
+  if (!file_exists($file)) {
+    $createdfiles++;
+    if ($createdfiles == 1) {
+      echo "---\nCreating Files | ";
+    }
+    echo "'$file', ";
+    $myfile = fopen("$file", "w");
+    fclose($myfile);
+  }
 }
-
+if ($createdfiles > 0) {
+  echo "\n---\n";
+}
 
 $myfile = fopen("chat.txt", "w");
 fclose($myfile);
 
-echo "Server running...\n";
+echo "Server running... \e[44m \e[4mhttp://127.0.0.1:81/Uno/uno.html\e[0m\e[44m \e[0m\n";
+echo "[Ctrl+C] to stop\n";
+
 $server = IoServer::factory(
   new HttpServer(
     new WsServer(

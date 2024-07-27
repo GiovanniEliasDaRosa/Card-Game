@@ -17,6 +17,7 @@ $GLOBALS['turnhasplayed'] = false;
 $GLOBALS['turnhasgotnewcard'] = false;
 $GLOBALS['turn'] = 'giovanni';
 $GLOBALS['direction'] = 1;
+$GLOBALS['getcardcount'] = 0;
 
 $GLOBALS['deck'] = generateNewDeck();
 $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
@@ -118,6 +119,12 @@ class system implements MessageComponentInterface
       $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
 
       if ($contenttype == 'disconnected') {
+        saveChat($sendbackcontent);
+
+        foreach ($this->cliente as $cliente) {
+          $cliente->send($sendback);
+        }
+
         if (count($GLOBALS['usersonline']) > 0) {
           $GLOBALS['searchname'] = $contentPass;
           $GLOBALS['usersonline'] = array_filter($GLOBALS['usersonline'], "filternameout");
@@ -134,12 +141,6 @@ class system implements MessageComponentInterface
           $cliente->send($sendbackuser);
         }
       }
-
-      saveChat($sendbackcontent);
-
-      foreach ($this->cliente as $cliente) {
-        $cliente->send($sendback);
-      }
     } else if ($type == 'game') {
       $contenttype = $content->type; // type
       $contentPass = $content->content; // content
@@ -147,7 +148,7 @@ class system implements MessageComponentInterface
       if ($contenttype == 'startgame') {
         $user = $contentPass->user;
         if (count($GLOBALS['usersonline']) < 2) {
-          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Quer começar o jogo mas só tem um usuário ativo</p>";
+          $sendbackcontent = "<p><span class='game'>Game</span>: Somente o usuário <span class='user'>" . $GLOBALS['usersonline'][0] . "</span> está ativo, é necessário de pelo menos 2 pessoas para iniciar</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
           $from->send($sendback);
           return;
@@ -160,6 +161,7 @@ class system implements MessageComponentInterface
         $GLOBALS['turnhasgotnewcard'] = false;
         $GLOBALS['turn'] = 'giovanni';
         $GLOBALS['direction'] = 1;
+        $GLOBALS['getcardcount'] = 0;
 
         $GLOBALS['deck'] = generateNewDeck();
         $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
@@ -254,6 +256,12 @@ class system implements MessageComponentInterface
       }
 
       if ($contenttype == 'wanttogetcard') {
+        if (($GLOBALS['tablecard']->value == 'draw2' || $GLOBALS['tablecard']->value == 'wilddrawfour') && $GLOBALS['turnhasplayed']) {
+          $sendbackcontent = "<p><span class='game'>Game</span>: Você não consegue pescar agora, jogue uma carta</p>";
+          $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+          $from->send($sendback);
+          return;
+        }
         $user = $contentPass->user;
 
         if ($GLOBALS['turn'] != $user) return;
@@ -370,12 +378,20 @@ class system implements MessageComponentInterface
                   $currentcardvalue == "reverse" ||
                   $currentcardvalue == "draw2"
                 ) {
+                  // Check if card on table is different than special cards( check if's a number basically),
+                  // and if the color is different then break and user can't play
                   if (
                     $cardontablevalue != "skip" &&
                     $cardontablevalue != "reverse" &&
                     $cardontablevalue != "draw2"
                   ) {
-                    if ($currentcardcolor != $cardontablecolor) {
+                    if ($currentcardcolor != $cardontablecolor) break;
+                  } else {
+                    // Check if card on table is a special card, and if they are diffent types ,like skip and draw2
+                    // and if the color is different then break and user can't play
+                    if (
+                      $currentcardvalue != $cardontablevalue && $currentcardcolor != $cardontablecolor
+                    ) {
                       break;
                     }
                   }
@@ -383,42 +399,24 @@ class system implements MessageComponentInterface
                   $canplay = true;
                   $playerpos = $i;
                   $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
-                  echo json_encode($cardplayed) . '|';
                   $GLOBALS['turnhasplayed'] = true;
                   array_push($GLOBALS['deck'], $GLOBALS['tablecard']);
-
-                  // echo json_encode($cardplayed);
                   $GLOBALS['tablecard'] = $cardplayed[0];
 
                   if ($currentcardvalue == "skip") {
                     $this->sendAll(passTurn());
                   } else if ($currentcardvalue == "reverse") {
                     $GLOBALS['direction'] = $GLOBALS['direction'] == 1 ? -1 : 1;
+                  } else {
+                    $GLOBALS['getcardcount'] += 2;
                   }
-
-                  //   $currentcardvalue == "skip" ||
-                  //   $currentcardvalue == "reverse" ||
-                  //   $currentcardvalue == "draw2" ||
-                  //   $currentcardvalue == "wild" ||
-                  //   $currentcardvalue == "wilddrawfour"
-                  // ) {
-
-
-                  // special cards on hand
                   break;
                 } else {
-                  // $currentcardvalue ||
-                  // $currentcardcolor ||
-                  // $cardontablevalue ||
-                  // $cardontablecolor ||
-                  if ($currentcardcolor != $cardontablecolor && $currentcardvalue != $cardontablevalue) {
-                    break;
-                  }
-                  // nubmers
+                  if ($currentcardcolor != $cardontablecolor && $currentcardvalue != $cardontablevalue) break;
+
                   $canplay = true;
                   $playerpos = $i;
                   $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
-                  echo json_encode($cardplayed) . '|';
                   $GLOBALS['turnhasplayed'] = true;
                   array_push($GLOBALS['deck'], $GLOBALS['tablecard']);
 
@@ -498,6 +496,7 @@ class system implements MessageComponentInterface
         $from->send($sendback);
 
         $this->sendAll(passTurn());
+
         saveGame();
         return;
       }
@@ -524,7 +523,7 @@ class system implements MessageComponentInterface
         }
       }
 
-      $sendbackuser = getGameInfo();
+      $sendbackuser = getGameInfo('userloaded');
 
       foreach ($this->cliente as $cliente) {
         $cliente->send($sendbackuser);

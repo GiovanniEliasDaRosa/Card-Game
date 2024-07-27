@@ -65,22 +65,6 @@ for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
 // }
 $GLOBALS['deck'] = $deck;
 
-// $totaldecks = 1;
-// while (count($stack) != 0) {
-//   $pos = random_int(0, (count($stack) - 1));
-//   $cardgot = array_splice($stack, $pos, 1);
-
-//   echo "<pre>";
-//   echo $pos . "-";
-//   echo $cardgot[0] . "\n";
-
-//   if (count($stack) == 0 && $totaldecks < 2) {
-//     echo "<hr>";
-//     $totaldecks++;
-//     $stack = $deck;
-//   }
-// }
-
 dump(count($GLOBALS['deck']));
 
 function getOneCardFromDeck()
@@ -103,8 +87,8 @@ $json = '{
   "cards": ' . json_encode($randomcards) . '
 }';
 
-echo $json . "\n\n";
-echo json_encode($randomcards) . "\n\n";
+// eco $json . "\n\n";
+// eco json_encode($randomcards) . "\n\n";
 
 dump(json_encode($json));
 dump(json_encode($randomcards));
