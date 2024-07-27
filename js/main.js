@@ -10,6 +10,12 @@ const currenttablecard = document.querySelector("#currenttablecard");
 const loadingspinner = document.querySelector(".loadingspinner");
 const root = document.querySelector(":root");
 
+const popupselectcolor = document.querySelector("#popupselectcolor");
+const popupselectcolor__buttons = [...document.querySelectorAll(".popupselectcolor__buttons")];
+const popupselectcolorPlaySelected = document.querySelector("#popupselectcolorPlaySelected");
+
+Disable(popupselectcolor);
+
 let testHUDuptimeout = "";
 const testHUDup = document.querySelector("#testHUDup");
 let testHUDdowntimeout = "";
@@ -99,6 +105,15 @@ function StartWebSocket(serverADDR) {
   ws.onmessage = (response) => {
     let result = JSON.parse(response.data);
 
+    if (result.type == "selectcolor") {
+      if (result.content == "select") {
+        Enable(popupselectcolor);
+      } else {
+        Disable(popupselectcolor);
+      }
+      return;
+    }
+
     if (result.type == "users") {
       activeUsers = result.usersactive;
       UpdateActiveUsers();
@@ -110,7 +125,12 @@ function StartWebSocket(serverADDR) {
       let tablecard = result.tablecard;
 
       currenttablecard.innerHTML = "";
-      CreateCard(tablecard.value, tablecard.color, "table");
+      let color = tablecard.color;
+      if (result.selectedcolor != "") {
+        color = result.selectedcolor;
+      }
+      CreateCard(tablecard.value, color, "table");
+
       if (!updatedUsersCard) {
         if (tablecard.value == "draw2" || tablecard.value == "wilddrawfour") {
           ws.send(JSON.stringify(dados));
@@ -174,7 +194,9 @@ function StartWebSocket(serverADDR) {
         chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
         let chatmessages = [...chatMessage.children];
         let lastchat = chatmessages[chatmessages.length - 1];
-        lastchat.scrollIntoView({ behavior: "smooth" });
+        if (lastchat != null) {
+          lastchat.scrollIntoView({ behavior: "smooth" });
+        }
       }
 
       GetWS();
@@ -408,7 +430,7 @@ function CreateCard(type, color, where = null) {
     newCard.className = `card ${color} ${type}`;
   }
 
-  if (type == "wild" || type == "wilddrawfour") {
+  if (type == "wilddrawfour") {
     Disable(newCard, false);
   }
 
@@ -445,3 +467,35 @@ function ScaleCards() {
   console.log(window.innerWidth, result);
   root.style = `--scale: ${result}`;
 }
+
+popupselectcolor__buttons.forEach((currentButton) => {
+  currentButton.onclick = () => {
+    if (currentButton.dataset.selected != null) {
+      currentButton.removeAttribute("data-selected");
+    } else {
+      popupselectcolor__buttons.forEach((button) => {
+        button.removeAttribute("data-selected");
+      });
+      currentButton.setAttribute("data-selected", "");
+    }
+  };
+});
+
+popupselectcolorPlaySelected.onclick = () => {
+  let selected = document.querySelector(".popupselectcolor__buttons[data-selected]");
+  if (selected == null) return;
+
+  let colorid = Number(selected.dataset.id);
+  if (colorid < 0 || colorid > 3) return;
+  dados = {
+    type: "game",
+    content: {
+      type: "selectedcolor",
+      content: colorid,
+    },
+  };
+  ws.send(JSON.stringify(dados));
+  return;
+};
+
+// Enable(popupselectcolor);

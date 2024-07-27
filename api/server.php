@@ -43,9 +43,8 @@ function generateNewDeck()
     $coloridx++;
   }
 
-  $specialCards = ['skip', 'reverse', 'draw2'];
-
   // create 2x 'special cards' each color
+  $specialCards = ['skip', 'reverse', 'draw2'];
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
     for ($currentSpecialCard = 0; $currentSpecialCard < 3; $currentSpecialCard++) {
       for ($quant = 0; $quant < 2; $quant++) {
@@ -58,16 +57,17 @@ function generateNewDeck()
   }
 
   // $blackCards = ['wild', 'wilddrawfour'];
+  $blackCards = ['wild'];
 
-  // // create 4x 'black cards'
-  // for ($currentBlackCard = 0; $currentBlackCard < 2; $currentBlackCard++) {
-  //   for ($quant = 0; $quant < 4; $quant++) {
-  //     $value = $blackCards[$currentBlackCard];
-  //     $color = 'black';
-  //     $card = '{"value": "' . $value . '","color": "' . $color . '"}';
-  //     array_push($deck, json_decode($card));
-  //   }
-  // }
+  // create 4x 'black cards'
+  for ($currentBlackCard = 0; $currentBlackCard < 1; $currentBlackCard++) {
+    for ($quant = 0; $quant < 4; $quant++) {
+      $value = $blackCards[$currentBlackCard];
+      $color = 'black';
+      $card = '{"value": "' . $value . '","color": "' . $color . '"}';
+      array_push($deck, json_decode($card));
+    }
+  }
   return $deck;
 }
 
@@ -89,7 +89,7 @@ function getGameInfo($type = null)
   }
   $turnhasgotnewcard = $GLOBALS['turnhasgotnewcard'] == true ? "true" : "false";
   $theircards = str_replace('"', '\"', json_encode($theircardsarray));
-  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard;
+  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard . ', "selectedcolor": "' . $GLOBALS['selectedcolor'] . '"';
 
   if ($type == 'userloaded') {
     $sendbackuser .= ', "userloaded": true}';

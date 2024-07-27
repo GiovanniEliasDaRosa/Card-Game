@@ -18,6 +18,10 @@ $GLOBALS['turnhasgotnewcard'] = false;
 $GLOBALS['turn'] = 'giovanni';
 $GLOBALS['direction'] = 1;
 $GLOBALS['getcardcount'] = 0;
+$GLOBALS['whoisselecting'] = '';
+$GLOBALS['selectedcolor'] = '';
+$GLOBALS['selectedacolor'] = false;
+$GLOBALS['selectcolor'] = false;
 
 $GLOBALS['deck'] = generateNewDeck();
 $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
@@ -162,6 +166,12 @@ class system implements MessageComponentInterface
         $GLOBALS['turn'] = 'giovanni';
         $GLOBALS['direction'] = 1;
         $GLOBALS['getcardcount'] = 0;
+        $GLOBALS['selectcolor'] = false;
+        $GLOBALS['selectedcolor'] = "";
+        $GLOBALS['whoisselecting'] = '';
+        $GLOBALS['selectedcolor'] = '';
+        $GLOBALS['selectedacolor'] = false;
+        $GLOBALS['selectcolor'] = false;
 
         $GLOBALS['deck'] = generateNewDeck();
         $GLOBALS['tablecard'] =  $GLOBALS['deck'][0];
@@ -256,7 +266,10 @@ class system implements MessageComponentInterface
       }
 
       if ($contenttype == 'wanttogetcard') {
-        if (($GLOBALS['tablecard']->value == 'draw2' || $GLOBALS['tablecard']->value == 'wilddrawfour') && $GLOBALS['turnhasplayed']) {
+        if (
+          ($GLOBALS['tablecard']->value == 'draw2' || $GLOBALS['tablecard']->value == 'wilddrawfour') &&
+          ($GLOBALS['turnhasplayed'] || $GLOBALS['selectedacolor'])
+        ) {
           $sendbackcontent = "<p><span class='game'>Game</span>: Você não consegue pescar agora, jogue uma carta</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
           $from->send($sendback);
@@ -345,6 +358,7 @@ class system implements MessageComponentInterface
       if ($contenttype == 'wanttoplaycard') {
         $canplay = false;
         $playerpos = 0;
+        $playedColorSelector = false;
         $user = $contentPass->user;
         $value = $contentPass->value;
         $color = $contentPass->color;
@@ -364,36 +378,52 @@ class system implements MessageComponentInterface
                 $currentcardcolor = $currentCard->color;
                 $cardontablevalue = $GLOBALS['tablecard']->value;
                 $cardontablecolor = $GLOBALS['tablecard']->color;
-                // if (
-                //   $cardontablevalue == "skip" ||
-                //   $cardontablevalue == "reverse" ||
-                //   $cardontablevalue == "draw2" ||
-                //   $cardontablevalue == "wild" ||
-                //   $cardontablevalue == "wilddrawfour"
-                // ) {
-                //   // special cards ONTABLE
-                // } else 
                 if (
+                  $currentcardvalue == "wild" ||
+                  $currentcardvalue == "wilddrawfour"
+                ) {
+                  // User played black cards
+                  // Check if card on table is different than special cards( check if's a number basically),
+                  $canplay = true;
+                  $playerpos = $i;
+                  $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
+                  $GLOBALS['turnhasplayed'] = true;
+                  array_push($GLOBALS['deck'], $GLOBALS['tablecard']);
+
+                  $GLOBALS['tablecard'] = $cardplayed[0];
+
+                  $sendback = '{"type": "selectcolor","content":"select"}';
+                  $from->send($sendback);
+                  $GLOBALS['whoisselecting'] = $user;
+                  $GLOBALS['selectcolor'] = true;
+                  $GLOBALS['selectedacolor'] = false;
+                  $playedColorSelector = true;
+                  break;
+                } else if (
                   $currentcardvalue == "skip" ||
                   $currentcardvalue == "reverse" ||
                   $currentcardvalue == "draw2"
                 ) {
-                  // Check if card on table is different than special cards( check if's a number basically),
-                  // and if the color is different then break and user can't play
-                  if (
-                    $cardontablevalue != "skip" &&
-                    $cardontablevalue != "reverse" &&
-                    $cardontablevalue != "draw2"
-                  ) {
-                    if ($currentcardcolor != $cardontablecolor) break;
-                  } else {
-                    // Check if card on table is a special card, and if they are diffent types ,like skip and draw2
+                  if (!$GLOBALS['selectedacolor']) {
+                    // Check if card on table is different than special cards( check if's a number basically),
                     // and if the color is different then break and user can't play
                     if (
-                      $currentcardvalue != $cardontablevalue && $currentcardcolor != $cardontablecolor
+                      $cardontablevalue != "skip" &&
+                      $cardontablevalue != "reverse" &&
+                      $cardontablevalue != "draw2"
                     ) {
-                      break;
+                      if ($currentcardcolor != $cardontablecolor) break;
+                    } else {
+                      // Check if card on table is a special card, and if they are diffent types ,like skip and draw2
+                      // and if the color is different then break and user can't play
+                      if (
+                        $currentcardvalue != $cardontablevalue && $currentcardcolor != $cardontablecolor
+                      ) {
+                        break;
+                      }
                     }
+                  } else {
+                    if ($currentcardcolor != $GLOBALS['selectedcolor']) break;
                   }
 
                   $canplay = true;
@@ -412,7 +442,11 @@ class system implements MessageComponentInterface
                   }
                   break;
                 } else {
-                  if ($currentcardcolor != $cardontablecolor && $currentcardvalue != $cardontablevalue) break;
+                  if (!$GLOBALS['selectedacolor']) {
+                    if ($currentcardcolor != $cardontablecolor && $currentcardvalue != $cardontablevalue) break;
+                  } else {
+                    if ($currentcardcolor != $GLOBALS['selectedcolor']) break;
+                  }
 
                   $canplay = true;
                   $playerpos = $i;
@@ -453,6 +487,13 @@ class system implements MessageComponentInterface
 
         $this->sendAll($sendback);
         if (!$canplay) return;
+
+        if ($GLOBALS['selectedacolor']) {
+          $GLOBALS['whoisselecting'] = '';
+          $GLOBALS['selectedcolor'] = '';
+          $GLOBALS['selectedacolor'] = false;
+          $GLOBALS['selectcolor'] = false;
+        }
 
         if (count($GLOBALS['game'][$playerpos]->cards) == 0) {
           $this->sendAll(passTurn());
@@ -495,10 +536,32 @@ class system implements MessageComponentInterface
         $sendback = '{"type":"game", "who":"' . $name . '", "content":' . $usercards . '}';
         $from->send($sendback);
 
-        $this->sendAll(passTurn());
+        if ($playedColorSelector) {
+          $this->sendAll(getGameInfo());
+        } else {
+          $this->sendAll(passTurn());
+        }
 
         saveGame();
         return;
+      }
+
+      if ($contenttype == 'selectedcolor' && $GLOBALS['selectcolor']) {
+        $colors = ['red', 'blue', 'yellow', 'green'];
+        $color = $colors[$contentPass];
+        $GLOBALS['selectedcolor'] = $color;
+        $GLOBALS['selectedacolor'] = true;
+        $GLOBALS['selectcolor'] = false;
+        $sendback = '{"type": "selectcolor","content":"close"}';
+        $from->send($sendback);
+
+        $this->sendAll(passTurn());
+      }
+
+      if ($GLOBALS['whoisselecting'] == $contentPass && !$GLOBALS['selectedacolor'] && $GLOBALS['selectcolor']) {
+        $sendback = '{"type": "selectcolor","content":"select"}';
+        $from->send($sendback);
+        $playedColorSelector = true;
       }
 
       // Send user his cards with value and color
