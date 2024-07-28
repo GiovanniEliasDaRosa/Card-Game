@@ -136,6 +136,40 @@ testHUDdown */
   --color: black;
 }
 
+.loading[data-value="loading"] {
+  --bg-color: hsl(204deg 9.8% 10%);
+  --spin-color-comp: hsl(0, 50%, 50%);
+
+  --wbg: linear-gradient(var(--bg-color), var(--bg-color));
+  height: 4em;
+  width: 4em;
+  flex: 0 0 4em;
+
+  margin: 1em auto;
+  border-radius: 50%;
+  border: 0.25em solid transparent;
+  animation: spin 3s cubic-bezier(0.5, -0.4, 0, 1.2) infinite;
+
+  background: var(--wbg),
+    conic-gradient(
+      from 0.15turn,
+      transparent 0turn,
+      transparent 0.05turn,
+      var(--spin-color-comp) 0.49turn,
+      var(--spin-color-comp) 0.5turn,
+      transparent 0.5turn,
+      transparent 0.55turn,
+      var(--spin-color-comp) 0.99999turn
+    );
+
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+.loading[data-value="loading"]::before {
+  opacity: 0;
+}
+
 /* otherplayers */
 #otherplayers {
   width: 100%;

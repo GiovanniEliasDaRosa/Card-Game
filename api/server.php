@@ -29,22 +29,21 @@ function generateNewDeck()
   }
 
   // create 2x 1-9 cards, 2 each color
-  // $coloridx = 0;
-  // for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-  //   for ($i = 1; $i < 10; $i++) {
-  //     for ($quant = 0; $quant < 2; $quant++) {
-  //       $value = $i;
-  //       $color = $colors[$coloridx];
-  //       $card = '{"value": "' . $value . '","color": "' . $color . '"}';
-  //       array_push($deck, json_decode($card));
-  //     }
-  //   }
-  //   $coloridx++;
-  // }
+  $coloridx = 0;
+  for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
+    for ($i = 1; $i < 10; $i++) {
+      for ($quant = 0; $quant < 2; $quant++) {
+        $value = $i;
+        $color = $colors[$coloridx];
+        $card = '{"value": "' . $value . '","color": "' . $color . '"}';
+        array_push($deck, json_decode($card));
+      }
+    }
+    $coloridx++;
+  }
 
   // create 2x 'special cards' each color
-  // $specialCards = ['skip', 'reverse', 'draw2'];
-  $specialCards = ['draw2'];
+  $specialCards = ['skip', 'reverse', 'draw2'];
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
     for ($currentSpecialCard = 0; $currentSpecialCard < 1; $currentSpecialCard++) {
       for ($quant = 0; $quant < 2; $quant++) {
@@ -56,10 +55,8 @@ function generateNewDeck()
     }
   }
 
-  // $blackCards = ['wild', 'wilddrawfour'];
-  $blackCards = ['wilddrawfour'];
-
   // create 4x 'black cards'
+  $blackCards = ['wild', 'wilddrawfour'];
   for ($currentBlackCard = 0; $currentBlackCard < 1; $currentBlackCard++) {
     for ($quant = 0; $quant < 4; $quant++) {
       $value = $blackCards[$currentBlackCard];
@@ -100,21 +97,43 @@ function getGameInfo($type = null)
   return $sendbackuser;
 }
 
+function loadGame()
+{
+  $goterror = false;
+  $gamefile = fopen("game.json", "r");
+  $gameFileResult = "";
+  if ($gamefile) {
+    while (($buffer = fgets($gamefile, 4096)) !== false) {
+      $gameFileResult .= str_replace("\r\n", '', $buffer);
+    }
+    if (!feof($gamefile)) {
+      $goterror = true;
+      return;
+    }
+    fclose($gamefile);
+  }
+  return [$gameFileResult, $goterror];
+}
+
 function saveGame()
 {
   $gameFile = new stdClass();
-  $gameFile->game = json_encode($GLOBALS['game']);
-  $gameFile->turn = $GLOBALS['turn'];
-  $gameFile->deck = json_encode($GLOBALS['deck']);
-  $gameFile->tablecard = json_encode($GLOBALS['tablecard']);
-  $gameFile->gamestarted = json_encode($GLOBALS['gamestarted']);
-  $gameFile->gameendend = json_encode($GLOBALS['gameendend']);
+  $gameFile->gamestarted = $GLOBALS['gamestarted'];
+  $gameFile->gameendend = $GLOBALS['gameendend'];
   $gameFile->usersthatwon = json_encode($GLOBALS['usersthatwon']);
-
   $gameFile->turnhasplayed = $GLOBALS['turnhasplayed'];
   $gameFile->turnhasgotnewcard = $GLOBALS['turnhasgotnewcard'];
   $gameFile->turn = $GLOBALS['turn'];
   $gameFile->direction = $GLOBALS['direction'];
+  $gameFile->getcardcount = $GLOBALS['getcardcount'];
+  $gameFile->selectcolor = $GLOBALS['selectcolor'];
+  $gameFile->whoisselecting = $GLOBALS['whoisselecting'];
+  $gameFile->selectedcolor = $GLOBALS['selectedcolor'];
+  $gameFile->selectedacolor = $GLOBALS['selectedacolor'];
+  $gameFile->selectcolor = $GLOBALS['selectcolor'];
+  $gameFile->deck = json_encode($GLOBALS['deck']);
+  $gameFile->tablecard = json_encode($GLOBALS['tablecard']);
+  $gameFile->game = json_encode($GLOBALS['game']);
 
   $gamefile = fopen("game.json", "w");
   fwrite($gamefile, json_encode($gameFile));
@@ -246,8 +265,13 @@ if ($createdfiles > 0) {
   echo "\n---\n";
 }
 
-$myfile = fopen("chat.txt", "w");
-fclose($myfile);
+[$gameFileResult, $goterror] = loadGame();
+
+if ($gameFileResult == "") {
+  // Clear old chat
+  $myfile = fopen("chat.txt", "w");
+  fclose($myfile);
+}
 
 echo "Server running... \e[44m \e[4mhttp://127.0.0.1:81/Uno/uno.html\e[0m\e[44m \e[0m\n";
 echo "[Ctrl+C] to stop\n";
