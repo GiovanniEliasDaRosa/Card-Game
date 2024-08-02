@@ -45,7 +45,7 @@ function generateNewDeck()
   // create 2x 'special cards' each color
   $specialCards = ['skip', 'reverse', 'draw2'];
   for ($currentcolor = 0; $currentcolor < 4; $currentcolor++) {
-    for ($currentSpecialCard = 0; $currentSpecialCard < 1; $currentSpecialCard++) {
+    for ($currentSpecialCard = 0; $currentSpecialCard < 3; $currentSpecialCard++) {
       for ($quant = 0; $quant < 2; $quant++) {
         $value = $specialCards[$currentSpecialCard];
         $color = $colors[$currentcolor];
@@ -57,7 +57,7 @@ function generateNewDeck()
 
   // create 4x 'black cards'
   $blackCards = ['wild', 'wilddrawfour'];
-  for ($currentBlackCard = 0; $currentBlackCard < 1; $currentBlackCard++) {
+  for ($currentBlackCard = 0; $currentBlackCard < 2; $currentBlackCard++) {
     for ($quant = 0; $quant < 4; $quant++) {
       $value = $blackCards[$currentBlackCard];
       $color = 'black';

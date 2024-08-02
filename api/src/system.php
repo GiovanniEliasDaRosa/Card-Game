@@ -184,10 +184,15 @@ class system implements MessageComponentInterface
 
         // Can't load a game, so continue to creation
         if ($gameFileResult == "" || $GLOBALS['gameendend']) {
+          // Clear old chat
+          $myfile = fopen("chat.txt", "w");
+          fclose($myfile);
+
           $GLOBALS['gameendend'] = false;
+          $cardcount = 7;
 
           echo "\e[41mNo game found, creating a new one\e[49m\n";
-          $quantusers =  count($GLOBALS['usersonline']) * 2;
+          $quantusers =  count($GLOBALS['usersonline']) * $cardcount;
           if ((count($GLOBALS['deck']) - $quantusers) < 2) {
             $olddeck = $GLOBALS['deck'];
             $GLOBALS['deck'] = generateNewDeck();
@@ -207,7 +212,7 @@ class system implements MessageComponentInterface
 
           for ($i = 0; $i < count($GLOBALS['usersonline']); $i++) {
             $randomcards = [];
-            for ($card = 0; $card < 2; $card++) {
+            for ($card = 0; $card < $cardcount; $card++) {
               array_push($randomcards, getOneCardFromDeck());
             }
             $newUser = new stdClass();
@@ -553,25 +558,27 @@ class system implements MessageComponentInterface
         fwrite($myfile, "'playerposcards': '" . json_encode($GLOBALS['game'][$playerpos]->cards) . "'},\r\n");
         fclose($myfile);
 
-        $canheplay = $canplay == true ? 'YES' : 'NO';
         $currentcardvalue = $GLOBALS['tablecard']->value;
         $currentcardcolor = $GLOBALS['tablecard']->color;
 
+        // $canheplay = $canplay == true ? 'YES' : 'NO';
         // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> $contenttype user='$user' | type='$type' | color='$color' || canheplay='$canheplay' || currentcardvalue='$currentcardvalue' && currentcardcolor='$currentcardcolor'</p>";
-        $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> turn='" . $GLOBALS['turn'] . "' | turnhasplayed='" . $GLOBALS['turnhasplayed'] . "' || canheplay='$canheplay' || deckcount='" . count($GLOBALS['deck']) . "'</p>";
-        $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-        $myfile = fopen("chat.txt", "a");
-        fwrite($myfile, $sendbackcontent . "\r\n");
-        fclose($myfile);
+        // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> turn='" . $GLOBALS['turn'] . "' | turnhasplayed='" . $GLOBALS['turnhasplayed'] . "' || canheplay='$canheplay' || deckcount='" . count($GLOBALS['deck']) . "'</p>";
+        // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+        // $myfile = fopen("chat.txt", "a");
+        // fwrite($myfile, $sendbackcontent . "\r\n");
+        // fclose($myfile);
+        // $this->sendAll($sendback);
 
-        $this->sendAll($sendback);
         if (!$canplay) return;
-        if ($GLOBALS['selectedacolor'] && $GLOBALS['tablecard']->value == 'wild') {
-          $GLOBALS['whoisselecting'] = '';
-          $GLOBALS['selectedcolor'] = '';
-          $GLOBALS['selectedacolor'] = false;
-          $GLOBALS['selectcolor'] = false;
-        }
+
+        // && $GLOBALS['tablecard']->value == 'wild'
+        // if ($GLOBALS['selectedacolor']) {
+        //   $GLOBALS['whoisselecting'] = '';
+        //   $GLOBALS['selectedcolor'] = '';
+        //   $GLOBALS['selectedacolor'] = false;
+        //   $GLOBALS['selectcolor'] = false;
+        // }
 
         if (count($GLOBALS['game'][$playerpos]->cards) == 0) {
           $this->sendAll(passTurn());
@@ -618,6 +625,15 @@ class system implements MessageComponentInterface
           $this->sendAll(getGameInfo());
         } else {
           $this->sendAll(passTurn());
+        }
+
+        if ($GLOBALS['selectedacolor']) {
+          $GLOBALS['whoisselecting'] = "";
+          $GLOBALS['selectedcolor'] = "";
+          $GLOBALS['selectedacolor'] = false;
+          $GLOBALS['selectcolor'] = false;
+          $sendback = '{"type": "selectcolor","content":"close"}';
+          $from->send($sendback);
         }
 
         saveGame();
