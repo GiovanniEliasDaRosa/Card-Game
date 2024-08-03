@@ -4,7 +4,6 @@ namespace Api\WebSocket;
 
 use Exception;
 use Ratchet\ConnectionInterface;
-// use Ratchet\RFC6455\Messaging\MessageInterface;
 use Ratchet\WebSocket\MessageComponentInterface;
 use stdClass;
 
@@ -22,25 +21,14 @@ $GLOBALS['whoisselecting'] = '';
 $GLOBALS['selectedcolor'] = '';
 $GLOBALS['selectedacolor'] = false;
 $GLOBALS['selectcolor'] = false;
-
 $GLOBALS['deck'] = generateNewDeck();
+$GLOBALS['game'] = array();
 
 $tablecarload = $GLOBALS['deck'][0];
 $tablecarload->value = 'loading';
 $tablecarload->color = 'loading';
 
 $GLOBALS['tablecard'] =  $tablecarload;
-$GLOBALS['game'] = array();
-
-// $handle = fopen("game.json", "r");
-// while (($buffer = fgets($handle, 4096)) !== false) {
-//   $lines .= str_replace("\r\n", '', $buffer);
-// }
-// if (!feof($handle)) {
-//   $goterror = true;
-//   return;
-// }
-// fclose($handle);
 
 class system implements MessageComponentInterface
 {
@@ -62,6 +50,8 @@ class system implements MessageComponentInterface
     $decodeJSON = json_decode($msg);
     $type = $decodeJSON->type;
     $content = $decodeJSON->content;
+
+    echo json_encode($from->Session);
 
     if ($type == 'message') {
       $user = $content->user;
@@ -551,11 +541,11 @@ class system implements MessageComponentInterface
         }
 
         $myfile = fopen("debug.json", "a");
-        fwrite($myfile, "{'tablecard': '" . json_encode($GLOBALS['tablecard']) . "', ");
-        fwrite($myfile, "'isnull': '" . ($GLOBALS['tablecard'] == null) . "', ");
-        fwrite($myfile, "'value': '" . $GLOBALS['tablecard']->value . "', ");
-        fwrite($myfile, "'color': '" . $GLOBALS['tablecard']->color . "'},\r\n");
-        fwrite($myfile, "'playerposcards': '" . json_encode($GLOBALS['game'][$playerpos]->cards) . "'},\r\n");
+        fwrite($myfile, '{"tablecard": "' . str_replace('"', '\\"', json_encode($GLOBALS['tablecard'])) . '", ');
+        fwrite($myfile, '"isnull": "' . ($GLOBALS['tablecard'] == null) . '", ');
+        fwrite($myfile, '"value": "' . $GLOBALS['tablecard']->value . '", ');
+        fwrite($myfile, '"color": "' . $GLOBALS['tablecard']->color . '", ');
+        fwrite($myfile, '"playerposcards": "' . str_replace('"', '\\"', json_encode($GLOBALS['game'][$playerpos]->cards)) . "\"},\r\n");
         fclose($myfile);
 
         $currentcardvalue = $GLOBALS['tablecard']->value;

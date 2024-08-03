@@ -4,6 +4,14 @@ $response["ok"] = false;
 $response["type"] = 'not ok';
 $type = null;
 
+function saveUser($uuid, $name)
+{
+  session_start();
+  ob_start();
+  $_SESSION['uuid'] = $uuid;
+  $_SESSION['name'] = $name;
+}
+
 // if ($_SERVER['REQUEST_METHOD'] != 'POST') {
 //   header("Location: index.php");
 //   exit();
@@ -65,11 +73,14 @@ if (!$validuuid) {
       $response["type"] = 'user login';
       header("Content-Type: application/json");
       echo json_encode($response);
+
+      saveUser($testuuid, $testname);
       exit();
     } else {
       $response["type"] = 'uuid invalid';
       header("Content-Type: application/json");
       echo json_encode($response);
+      session_destroy();
       exit();
     }
   } else if ($type == 'availableuuid' && $testing) {
@@ -83,6 +94,7 @@ if (!$validuuid) {
     $response["type"] = 'uuid invalid';
     header("Content-Type: application/json");
     echo json_encode($response);
+    session_destroy();
     exit();
   }
 } else if ($type == 'saveifneeded') {
@@ -96,9 +108,11 @@ if (!$validuuid) {
 
     header("Content-Type: application/json");
     echo json_encode($response);
+    exit();
   }
+  $postname = $_POST['name'];
   $myfile = fopen("../api/users.txt", "a");
-  $result = "$testuuid;" . $_POST['name'] . "\r\n";
+  $result = "$testuuid;" .  $postname . "\r\n";
   fwrite($myfile,  $result);
   fclose($myfile);
 
@@ -106,6 +120,8 @@ if (!$validuuid) {
   $response["type"] = 'user login';
   header("Content-Type: application/json");
   echo json_encode($response);
+
+  saveUser($testuuid, $postname);
   exit();
 }
 

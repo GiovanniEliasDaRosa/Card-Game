@@ -46,6 +46,7 @@ fetch("fetchable/loadws.php", {
 })
   .then((response) => response.json())
   .then((data) => {
+    console.log(data);
     if (data.ok) StartWebSocket(data.serverADDR);
   })
   .catch((error) => {

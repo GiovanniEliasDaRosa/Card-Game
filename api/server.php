@@ -273,6 +273,11 @@ if ($gameFileResult == "") {
   fclose($myfile);
 }
 
+// Remove all active users
+$myfile = fopen("usersonline.txt", "w");
+fwrite($myfile, "[]");
+fclose($myfile);
+
 echo "Server running... \e[44m \e[4mhttp://127.0.0.1:81/Uno/uno.html\e[0m\e[44m \e[0m\n";
 echo "[Ctrl+C] to stop\n";
 

@@ -52,6 +52,10 @@ if (!$valid) {
 
 $response["ok"] = true;
 $response["type"] = 'ok';
+$_SESSION['uuid'] = $testuuid;
+$_SESSION['name'] = $testname;
+session_start();
+ob_start();
 
 header("Content-Type: application/json");
 echo json_encode($response);
