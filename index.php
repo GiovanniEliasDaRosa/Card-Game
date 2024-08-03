@@ -1,3 +1,11 @@
+<?php
+session_start();
+ob_start();
+
+// Import custom dumper made by Giovanni Elias da Rosa
+include('dumpper/dumpper.php');
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 

@@ -9,6 +9,7 @@ const table = document.querySelector("#table");
 const currenttablecard = document.querySelector("#currenttablecard");
 const loadingspinner = document.querySelector(".loadingspinner");
 const root = document.querySelector(":root");
+let thisUserTurn = false;
 
 const popupselectcolor = document.querySelector("#popupselectcolor");
 const popupselectcolor__buttons = [...document.querySelectorAll(".popupselectcolor__buttons")];
@@ -27,36 +28,23 @@ let ws = null;
 let activeUsers = 0;
 let gamealreadyrunning = false;
 let gameended = false;
-// Disable(getMoreCard, false);
-// Disable(playCard, false);
 let updatedUsersCard = false;
 
-let userName = localStorage.getItem("username");
-if (userName == null) {
-  window.location.href = `${window.location.origin}/Uno/index.html`;
-}
+Disable(getMoreCard, false);
+Disable(playCard, false);
+
 userNameElement.textContent = userName;
 
-fetch("fetchable/loadws.php", {
-  method: "POST",
-  body: new URLSearchParams(null),
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-  },
-})
-  .then((response) => response.json())
-  .then((data) => {
-    console.log(data);
-    if (data.ok) StartWebSocket(data.serverADDR);
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+StartWebSocket(document.querySelector("#serverADDR").innerText);
+
+document.querySelector("#serverADDR").remove();
+document.querySelector("#sessionUuid").remove();
+document.querySelector("#sessionName").remove();
 
 function StartWebSocket(serverADDR) {
   if (userName == null) return;
 
-  if (serverADDR == "127.0.0.1") {
+  if (serverADDR == "127.0.0.1" || userName == "giovanni") {
     let startGame = document.createElement("button");
     startGame.classList = "button";
     startGame.id = "startGame";
@@ -108,6 +96,8 @@ function StartWebSocket(serverADDR) {
 
     if (result.type == "selectcolor") {
       if (result.content == "select") {
+        Disable(getMoreCard, false);
+        Disable(playCard, false);
         Enable(popupselectcolor);
       } else {
         Disable(popupselectcolor);
@@ -147,11 +137,13 @@ function StartWebSocket(serverADDR) {
 
           setTimeout(() => {
             updatedUsersCard = false;
-          }, 500);
+          }, 1000);
         }
       }
 
       otherplayers.innerHTML = "";
+      Disable(getMoreCard, false);
+      Disable(playCard, false);
 
       for (let i = 0; i < theircards.length; i++) {
         const currentUser = theircards[i];
@@ -166,11 +158,18 @@ function StartWebSocket(serverADDR) {
           classlist += "turn ";
 
           if (currentUser[0] == userName) {
+            Enable(getMoreCard, false);
+            Enable(playCard, false);
             if (gameended) {
               document.body.removeAttribute("data-myturn");
+              thisUserTurn = false;
+              Disable(playCard, false);
             } else {
               document.body.setAttribute("data-myturn", "");
+              thisUserTurn = true;
+              Enable(getMoreCard);
             }
+
             if (turnhasgotnewcard) {
               getMoreCard.innerText = "Passar vez";
             } else {
@@ -239,7 +238,7 @@ function StartWebSocket(serverADDR) {
         alert("Os ganhadores foram " + resultedtext);
       }, 500);
 
-      if (serverADDR == "127.0.0.1") {
+      if (serverADDR == "127.0.0.1" || userName == "giovanni") {
         let startGame = document.createElement("button");
         startGame.classList = "button";
         startGame.id = "startGame";
@@ -404,9 +403,6 @@ getMoreCard.onclick = () => {
   SendWS();
 
   Disable(getMoreCard, false);
-  setTimeout(() => {
-    Enable(getMoreCard);
-  }, 1000);
 };
 
 message.onkeyup = (e) => {

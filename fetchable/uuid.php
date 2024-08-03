@@ -35,8 +35,6 @@ if (isset($_POST['testing'])) {
 $testuuid = $_POST['uuid'];
 $validuuid = true;
 $validname = true;
-$lines = 0;
-$resulsts = array();
 $invalidLine = null;
 $myfile = fopen("../api/users.txt", "r");
 

@@ -1,3 +1,11 @@
+<?php
+session_start();
+ob_start();
+
+// Import custom dumper made by Giovanni Elias da Rosa
+include('dumpper/dumpper.php');
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -17,6 +25,73 @@
 </head>
 
 <body>
+  <?php
+  $serverADDR = $_SERVER['SERVER_ADDR'];
+
+  function redirect()
+  {
+    session_destroy();
+    header("Location: index.php");
+    exit();
+  }
+
+  if (count($_SESSION) == 0) {
+    // No session
+    redirect();
+  }
+
+  if ($_SESSION['uuid'] == null || $_SESSION['name'] == null) {
+    // No session ( no uuid or name )
+    redirect();
+  }
+
+  $sessionUuid = $_SESSION['uuid'];
+  $sessionName = $_SESSION['name'];
+
+  $validuuid = true;
+  $validname = true;
+  $invalidLine = null;
+  $myfile = fopen("api/users.txt", "r");
+  while (($buffer = fgets($myfile, 4096)) !== false && $validuuid && $validname) {
+    $explodedLine = explode(';', $buffer);
+
+    if ($explodedLine[0] == $sessionUuid) {
+      $validuuid = false;
+      $invalidLine = $explodedLine;
+    }
+  }
+  fclose($myfile);
+
+
+  // Found uuid in file
+  // if (!$validuuid) {
+  // Check name on file and this user name
+  if (str_replace("\r\n", "", $invalidLine[1]) != $sessionName) {
+    // Check name on file and this user name is different end session and redirect
+    redirect();
+  }
+  // }
+
+  ?>
+  <p id="serverADDR" style="display: none;" aria-disabled="true"><?= $serverADDR ?></p>
+  <p id="sessionUuid" style="display: none;" aria-disabled="true"><?= $sessionUuid ?></p>
+  <p id="sessionName" style="display: none;" aria-disabled="true"><?= $sessionName ?></p>
+  <script>
+    let userName = localStorage.getItem("username");
+    let userUuid = localStorage.getItem("userid");
+
+    if (userUuid == null || userName == null) {
+      <?= redirect(); ?>
+    }
+
+    if (
+      userUuid != document.querySelector("#sessionUuid").innerText ||
+      userName != document.querySelector("#sessionName").innerText
+    ) {
+      <?= redirect(); ?>
+    }
+  </script>
+
   <main>
     <div id="uno">
       <div id="otherplayers"></div>
@@ -55,10 +130,6 @@
 
         <input type="button" value="Enviar" class="button" id="sendmessage" />
       </div>
-      <!--
-          // Import custom dumper made by Giovanni Elias da Rosa
-          // include('dumpper/dumpper.php');
-        -->
     </div>
   </main>
 </body>

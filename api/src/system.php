@@ -51,8 +51,6 @@ class system implements MessageComponentInterface
     $type = $decodeJSON->type;
     $content = $decodeJSON->content;
 
-    echo json_encode($from->Session);
-
     if ($type == 'message') {
       $user = $content->user;
       $message = $content->message;
@@ -391,15 +389,14 @@ class system implements MessageComponentInterface
             $sendback = '{"type":"game", "who":"' . $user . '", "content":' . $usercards . '}';
             $from->send($sendback);
 
-            $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Loadded $cardCount cards</p>";
-            $myfile = fopen("chat.txt", "a");
-            fwrite($myfile, $sendbackcontent . "\r\n");
-            fclose($myfile);
-
-            $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-            foreach ($this->cliente as $cliente) {
-              $cliente->send($sendback);
-            }
+            // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Loadded $cardCount cards</p>";
+            // $myfile = fopen("chat.txt", "a");
+            // fwrite($myfile, $sendbackcontent . "\r\n");
+            // fclose($myfile);
+            // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+            // foreach ($this->cliente as $cliente) {
+            //   $cliente->send($sendback);
+            // }
 
             $GLOBALS['turnhasgotnewcard'] = true;
             break;
@@ -408,16 +405,16 @@ class system implements MessageComponentInterface
 
         if (!$gotcard) return;
 
-        $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$currentname</span> Pescou uma carta</p>";
-        $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-        $myfile = fopen("chat.txt", "a");
-        fwrite($myfile, $sendbackcontent . "\r\n");
-        fclose($myfile);
+        // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$currentname</span> Pescou uma carta</p>";
+        // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
+        // $myfile = fopen("chat.txt", "a");
+        // fwrite($myfile, $sendbackcontent . "\r\n");
+        // fclose($myfile);
+        // $cliente->send($sendback);
 
         $sendbackuser = getGameInfo();
 
         foreach ($this->cliente as $cliente) {
-          $cliente->send($sendback);
           $cliente->send($sendbackuser);
         }
 

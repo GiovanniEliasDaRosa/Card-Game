@@ -143,7 +143,7 @@ acessButton.onclick = () => {
 
         setTimeout(() => {
           console.log("redirect");
-          window.location.href = `${window.location.origin}/Uno/uno.html`;
+          window.location.href = `${window.location.origin}/Uno/uno.php`;
         }, 1000);
       }
     })
