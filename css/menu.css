@@ -4,32 +4,15 @@ body {
   align-items: center;
 }
 
-main {
+form {
   display: flex;
   flex-direction: column;
   gap: 1em;
   padding: 1.5em;
 }
-/* 
-#usernameDiv {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-} */
-
-/* label {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.25rem;
-  line-height: 1em;
-  padding: 1em;
-} */
 
 label {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
   font-size: 1.5rem;
   line-height: 1em;
 }
@@ -38,11 +21,19 @@ h1 {
   text-align: center;
 }
 
-#warntext {
-  padding: 1em;
-  background-color: hsl(25, 95%, 15%);
-  border: solid 0.1em hsl(25, 100%, 50%);
+.warn {
+  --background-color: hsl(25, 95%, 15%);
+  --border-color: hsl(25, 100%, 50%);
+  padding: 0.75em;
+  background-color: var(--background-color);
+  border: solid 0.1em var(--border-color);
   border-radius: 1em;
+}
+
+#error {
+  padding: 0.5em 0.75em;
+  --background-color: hsl(0, 95%, 15%);
+  --border-color: hsl(0, 75%, 45%);
 }
 
 #headerTitle {

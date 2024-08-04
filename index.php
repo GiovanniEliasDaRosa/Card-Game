@@ -2,8 +2,68 @@
 session_start();
 ob_start();
 
-// Import custom dumper made by Giovanni Elias da Rosa
-include('dumpper/dumpper.php');
+// session_destroy();
+// if (isset($_SERVER['HTTP_COOKIE'])) {
+//   $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
+//   foreach ($cookies as $cookie) {
+//     $parts = explode('=', $cookie);
+//     $name = trim($parts[0]);
+//     setcookie($name, '', time() - 1000);
+//     setcookie($name, '', time() - 1000, '/');
+//   }
+// }
+
+$hassession = false;
+$hascookie = false;
+
+if (isset($_SESSION["username"])) {
+  $hassession = true;
+}
+if (isset($_COOKIE["username"])) {
+  $hascookie = true;
+}
+$username = "";
+$hideTheWarning = false;
+$usernameInputIsDisabled = "";
+$warningIsDisabled = "";
+
+if ($hassession) {
+  $hideTheWarning = true;
+  $username = $_SESSION["username"];
+} else if ($hascookie) {
+  $hideTheWarning = true;
+  $username = $_COOKIE["username"];
+}
+
+$disable = 'aria-disabled="true" disabled';
+$hideElem = 'style="display: none"' . $disable;
+if ($hideTheWarning) {
+  $usernameInputIsDisabled = $disable;
+  $warningIsDisabled = $hideElem;
+}
+
+
+$errorDisabled = $hideElem;
+$errorContent = "";
+
+if (isset($_GET["e"])) {
+  if ($_GET["e"] != '') {
+    $ePassed = $_GET["e"];
+    if ($ePassed == 'invalidname') {
+      $errorDisabled = "";
+      $errorContent = "Nome inválido";
+    }
+  }
+}
+
+
+
+
+// if (isset($_COOKIE["username"])) {
+//   $username = $_COOKIE["username"];
+// } else {
+//   $username = '';
+// }
 ?>
 
 <!DOCTYPE html>
@@ -24,18 +84,20 @@ include('dumpper/dumpper.php');
 
 <body>
   <main>
-    <div id="headerTitle">
-      <img src="img/favicon_16x16.png" alt="Card image" id="cardImage" />
-      <h1>Acessar Uno</h1>
-    </div>
-    <label for="nome">Nome</label>
-    <input type="text" name="username" id="username" placeholder="Digite o nome" required />
-    <p id="warntext">
-      <strong>Atenção</strong>: Uma vez criado um nome, ele
-      <strong>não poderá ser alterado</strong>.<br />
-      Escolha com cuidado, pois será <strong>permanente</strong>.
-    </p>
-    <input type="button" name="acessar" value="Acessar" class="button" id="acessButton" />
+    <form action="login.php" method="POST" enctype="multipart/form-data">
+      <div id="headerTitle">
+        <img src="img/favicon_16x16.png" alt="Card image" id="cardImage" />
+        <h1>Acessar Uno</h1>
+      </div>
+      <label for="username">Nome</label>
+      <input type="text" name="username" id="username" placeholder="Digite o nome" required value="<?= $username ?>" <?= $usernameInputIsDisabled ?> />
+      <p class="warn" id="error" <?= $errorDisabled ?>><?= $errorContent ?></p>
+      <p class="warn" id="warntext" <?= $warningIsDisabled ?>>
+        <strong>Atenção</strong>: Uma vez criado um nome, ele <strong>não poderá ser alterado</strong>.<br />
+        Escolha com cuidado, pois será <strong>permanente</strong>.
+      </p>
+      <input type="submit" name="acess" value="Acessar" class="button" id="acessButton" />
+    </form>
   </main>
 </body>
 

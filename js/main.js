@@ -33,16 +33,14 @@ let updatedUsersCard = false;
 Disable(getMoreCard, false);
 Disable(playCard, false);
 
-userNameElement.textContent = userName;
+const userName = userNameElement.textContent;
 
 StartWebSocket(document.querySelector("#serverADDR").innerText);
 
 document.querySelector("#serverADDR").remove();
-document.querySelector("#sessionUuid").remove();
-document.querySelector("#sessionName").remove();
 
 function StartWebSocket(serverADDR) {
-  if (userName == null) return;
+  if (userName == "") return;
 
   if (serverADDR == "127.0.0.1" || userName == "giovanni") {
     let startGame = document.createElement("button");
@@ -457,7 +455,6 @@ function ScaleCards() {
     prefered = window.innerHeight;
   }
   let result = Clamp(prefered / 2 / 64, 0, 5);
-  console.log(window.innerWidth, result);
   root.style = `--scale: ${result}`;
 }
 
