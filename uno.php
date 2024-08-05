@@ -26,7 +26,7 @@ include('dumpper/dumpper.php');
 
 <body>
   <p id="serverADDR" style="display: none;" aria-disabled="true"><?= $_SERVER['SERVER_ADDR']; ?></p>
-  <p id="id" style="display: none;" aria-disabled="true"><?= $GLOBALS['id'] ?></p>
+  <p id="userID" style="display: none;" aria-disabled="true"><?= $GLOBALS['id'] ?></p>
   <main>
     <div id="uno">
       <div id="otherplayers"></div>

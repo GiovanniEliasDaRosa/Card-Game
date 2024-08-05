@@ -166,6 +166,10 @@ testHUDdown */
   background-clip: content-box, border-box;
 }
 
+.loading[data-value="loading"].stopspinner {
+  animation: none;
+}
+
 .loading[data-value="loading"]::before {
   opacity: 0;
 }

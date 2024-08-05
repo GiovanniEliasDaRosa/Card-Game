@@ -167,7 +167,7 @@ function validateUser($name, $fromUno)
   } else {
     // echo "<b>  NOT a valid name || OR hasSession/hasCookie</b>\n";
     if ($noSessionNoCookie) {
-      redirect('No session and no cookie / not a valid name', "e=invalidname");
+      redirect('No session and no cookie / not a valid name', "e=invalidname&v=$name");
     }
 
     if (!$hassession) {

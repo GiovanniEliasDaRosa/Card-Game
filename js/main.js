@@ -3,6 +3,7 @@ const message = document.querySelector("#message");
 const sendmessage = document.querySelector("#sendmessage");
 const playCard = document.querySelector("#playCard");
 const userNameElement = document.querySelector("#userName");
+const userIDElement = document.querySelector("#userID");
 const otherplayers = document.querySelector("#otherplayers");
 const getMoreCard = document.querySelector("#getMoreCard");
 const table = document.querySelector("#table");
@@ -34,15 +35,15 @@ Disable(getMoreCard, false);
 Disable(playCard, false);
 
 const userName = userNameElement.textContent;
+const userID = userIDElement.textContent;
 
 StartWebSocket(document.querySelector("#serverADDR").innerText);
-
 document.querySelector("#serverADDR").remove();
 
 function StartWebSocket(serverADDR) {
   if (userName == "") return;
 
-  if (serverADDR == "127.0.0.1" || userName == "giovanni") {
+  if (serverADDR == "127.0.0.1" || userName == "Giovanni") {
     let startGame = document.createElement("button");
     startGame.classList = "button";
     startGame.id = "startGame";
@@ -50,16 +51,15 @@ function StartWebSocket(serverADDR) {
 
     table.appendChild(startGame);
     startGame.onclick = () => {
-      let dados = {
+      let data = {
         type: "game",
         content: {
           type: "startgame",
-          content: {
-            user: userName,
-          },
+          id: userID,
+          user: userName,
         },
       };
-      ws.send(JSON.stringify(dados));
+      ws.send(JSON.stringify(data));
       SendWS();
     };
   }
@@ -67,22 +67,16 @@ function StartWebSocket(serverADDR) {
   ws = new WebSocket(`ws://${serverADDR}:8080/`);
   ws.onopen = (e) => {
     loadingspinner.remove();
-    let dados = {
+    let data = {
       type: "server",
       content: {
         type: "connected",
-        content: userName,
+        id: userID,
+        user: userName,
       },
     };
-    ws.send(JSON.stringify(dados));
-    dados = {
-      type: "game",
-      content: {
-        type: "getInfo",
-        content: userName,
-      },
-    };
-    ws.send(JSON.stringify(dados));
+    ws.send(JSON.stringify(data));
+    getInfo();
   };
 
   ws.onerror = (e) => {
@@ -122,20 +116,12 @@ function StartWebSocket(serverADDR) {
 
       if (!updatedUsersCard) {
         if (tablecard.value == "draw2" || tablecard.value == "wilddrawfour") {
-          ws.send(JSON.stringify(dados));
-          dados = {
-            type: "game",
-            content: {
-              type: "getInfo",
-              content: userName,
-            },
-          };
-          ws.send(JSON.stringify(dados));
+          getInfo();
           updatedUsersCard = true;
 
           setTimeout(() => {
             updatedUsersCard = false;
-          }, 1000);
+          }, 1500);
         }
       }
 
@@ -186,6 +172,7 @@ function StartWebSocket(serverADDR) {
     if (result.type != "game") {
       if (result.started != null) {
         startGame.remove();
+        getInfo();
         gameended = false;
       }
       if (result.content != undefined) {
@@ -196,7 +183,6 @@ function StartWebSocket(serverADDR) {
           lastchat.scrollIntoView({ behavior: "smooth" });
         }
       }
-
       GetWS();
       return;
     }
@@ -209,14 +195,7 @@ function StartWebSocket(serverADDR) {
         startGameButton.remove();
       }
 
-      dados = {
-        type: "game",
-        content: {
-          type: "getInfo",
-          content: userName,
-        },
-      };
-      ws.send(JSON.stringify(dados));
+      getInfo();
       return;
     }
 
@@ -236,7 +215,7 @@ function StartWebSocket(serverADDR) {
         alert("Os ganhadores foram " + resultedtext);
       }, 500);
 
-      if (serverADDR == "127.0.0.1" || userName == "giovanni") {
+      if (serverADDR == "127.0.0.1" || userName == "Giovanni") {
         let startGame = document.createElement("button");
         startGame.classList = "button";
         startGame.id = "startGame";
@@ -244,16 +223,17 @@ function StartWebSocket(serverADDR) {
 
         table.appendChild(startGame);
         startGame.onclick = () => {
-          let dados = {
+          let data = {
             type: "game",
             content: {
               type: "startgame",
               content: {
                 user: userName,
+                id: userID,
               },
             },
           };
-          ws.send(JSON.stringify(dados));
+          ws.send(JSON.stringify(data));
           SendWS();
           startGame.remove();
         };
@@ -274,13 +254,20 @@ function StartWebSocket(serverADDR) {
       const card = cards[i];
       CreateCard(card.value, card.color);
     }
-
-    // console.log(result.userloaded);
-    // console.log(result.userloaded == false);
-    // if (result.userloaded) {
-    //   updatedUsersCard = false;
-    // }
   };
+}
+
+function getInfo() {
+  console.trace();
+  let data = {
+    type: "game",
+    content: {
+      type: "getInfo",
+      user: userName,
+      id: userID,
+    },
+  };
+  ws.send(JSON.stringify(data));
 }
 
 const sendMessage = () => {
@@ -288,14 +275,15 @@ const sendMessage = () => {
     return;
   }
 
-  let dados = {
+  let data = {
     type: "message",
     content: {
+      id: userID,
       user: userName,
       message: message.value,
     },
   };
-  ws.send(JSON.stringify(dados));
+  ws.send(JSON.stringify(data));
   message.value = "";
 
   SendWS();
@@ -329,38 +317,61 @@ function UpdateActiveUsers() {
   }, 1500);
 }
 
-window.onbeforeunload = () => {
-  let dados = {
+function disconectUser() {
+  let data = {
     type: "server",
     content: {
       type: "disconnected",
-      content: userName,
+      id: userID,
+      user: userName,
     },
   };
-  ws.send(JSON.stringify(dados));
-};
+  ws.send(JSON.stringify(data));
+}
 
-// function DisconnectUser() {
-//   let dados = {
-//     type: "server",
-//     content: {
-//       type: "disconnected",
-//       content: userName,
-//     },
-//   };
-//   ws.send(JSON.stringify(dados));
-// }
+let disconnecTimeout = "";
+let officialyDisconected = false;
+let animationPlayed = false;
+let time = 2000;
+if (isMobile) {
+  time = 2; // 2 Seconds
+} else {
+  window.onbeforeunload = () => {
+    disconectUser();
+  };
+  time = 60 * 5; // 5 minutes
+}
+document.addEventListener("visibilitychange", visibilityChanged);
 
-// let disconnecTimeout = "";
+function visibilityChanged() {
+  clearTimeout(disconnecTimeout);
+  if (document.hidden) {
+    disconnecTimeout = setTimeout(() => {
+      disconectUser();
+      officialyDisconected = true;
+    }, time * 1000);
+  } else {
+    if (officialyDisconected && !animationPlayed) {
+      animationPlayed = true;
+      Disable(document.body, false);
+      let interactableElements = [...document.querySelectorAll("input, button")];
+      ws.close();
 
-// document.addEventListener("visibilitychange", (e) => {
-//   clearTimeout(disconnecTimeout);
-//   if (document.hidden) {
-//     disconnecTimeout = setTimeout(() => {
-//       DisconnectUser();
-//     }, 2000);
-//   }
-// });
+      let tablecard = currenttablecard.children[0];
+      if (tablecard.classList.contains("loading")) {
+        tablecard.classList.add("stopspinner");
+      }
+
+      interactableElements.forEach((element) => {
+        Enable(element);
+
+        setTimeout(() => {
+          Disable(element, false);
+        }, 100 + RandomNumber(1, 10) * 200);
+      });
+    }
+  }
+}
 
 playCard.onclick = () => {
   if (hand.querySelector("[data-selected]") == null) return;
@@ -372,33 +383,34 @@ playCard.onclick = () => {
   let color = selectedCard.classList[1];
   console.log(`SEND -> value='${value}' color='${color}'`);
 
-  let dados = {
+  let data = {
     type: "game",
     content: {
       type: "wanttoplaycard",
-      content: {
-        user: userName,
-        value: value,
-        color: color,
-      },
+      user: userName,
+      id: userID,
+      value: value,
+      color: color,
     },
   };
-  ws.send(JSON.stringify(dados));
+  ws.send(JSON.stringify(data));
   SendWS();
 };
 
 getMoreCard.onclick = () => {
-  let dados = {
+  let data = {
     type: "game",
     content: {
       type: "wanttogetcard",
-      content: {
-        user: userName,
-      },
+      user: userName,
+      id: userID,
     },
   };
-  ws.send(JSON.stringify(dados));
+  ws.send(JSON.stringify(data));
   SendWS();
+  if (isMobile) {
+    getMoreCard.blur();
+  }
 
   Disable(getMoreCard, false);
 };
@@ -477,14 +489,16 @@ popupselectcolorPlaySelected.onclick = () => {
 
   let colorid = Number(selected.dataset.id);
   if (colorid < 0 || colorid > 3) return;
-  dados = {
+  data = {
     type: "game",
     content: {
+      id: userID,
+      user: userName,
       type: "selectedcolor",
-      content: colorid,
+      colorid: colorid,
     },
   };
-  ws.send(JSON.stringify(dados));
+  ws.send(JSON.stringify(data));
   selected.removeAttribute("data-selected");
   return;
 };

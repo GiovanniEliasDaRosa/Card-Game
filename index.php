@@ -47,11 +47,13 @@ $errorDisabled = $hideElem;
 $errorContent = "";
 
 if (isset($_GET["e"])) {
-  if ($_GET["e"] != '') {
+  if ($_GET["e"] != '' && $_GET["v"] != '') {
     $ePassed = $_GET["e"];
+    $namePassed = $_GET["v"];
     if ($ePassed == 'invalidname') {
       $errorDisabled = "";
-      $errorContent = "Nome inválido";
+      $username = $namePassed;
+      $errorContent = "O nome \"$namePassed\" inválido";
     }
   }
 }

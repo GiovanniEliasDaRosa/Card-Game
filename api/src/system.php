@@ -7,42 +7,21 @@ use Ratchet\ConnectionInterface;
 use Ratchet\WebSocket\MessageComponentInterface;
 use stdClass;
 
-$GLOBALS['gameendend'] = false;
-$GLOBALS['gamestarted'] = false;
-$GLOBALS['searchname'] = '';
 $GLOBALS['usersonline'] = array();
-$GLOBALS['usersthatwon'] = array();
-$GLOBALS['turnhasplayed'] = false;
-$GLOBALS['turnhasgotnewcard'] = false;
-$GLOBALS['turn'] = 'giovanni';
-$GLOBALS['direction'] = 1;
-$GLOBALS['getcardcount'] = 0;
-$GLOBALS['whoisselecting'] = '';
-$GLOBALS['selectedcolor'] = '';
-$GLOBALS['selectedacolor'] = false;
-$GLOBALS['selectcolor'] = false;
-$GLOBALS['deck'] = generateNewDeck();
-$GLOBALS['game'] = array();
-
-$tablecarload = $GLOBALS['deck'][0];
-$tablecarload->value = 'loading';
-$tablecarload->color = 'loading';
-
-$GLOBALS['tablecard'] =  $tablecarload;
+resetGame(true, true);
 
 class system implements MessageComponentInterface
 {
-  protected $cliente;
+  protected $client;
 
   public function __construct()
   {
-    // Iniciar o objeto que deve armazenar os clientes conectados
-    $this->cliente = new \SplObjectStorage;
+    $this->client = new \SplObjectStorage;
   }
 
   public function onOpen(ConnectionInterface $conn)
   {
-    $this->cliente->attach($conn);
+    $this->client->attach($conn);
   }
 
   public function onMessage(ConnectionInterface $from, $msg)
@@ -51,32 +30,55 @@ class system implements MessageComponentInterface
     $type = $decodeJSON->type;
     $content = $decodeJSON->content;
 
+    // null type or content
+    if (!isset($decodeJSON->type) || !isset($decodeJSON->content)) return;
+
+    /******VALIDATE USER*****/
+    // null id or name
+    if (!isset($content->id) || !isset($content->user)) return;
+
+    $userId = $content->id;
+    $userName = $content->user;
+
+    $invalidUser = true;
+    $myfile = fopen("users.txt", "r");
+    while (($buffer = fgets($myfile, 4096)) !== false && $invalidUser) {
+      $explodedLine = str_replace("\r\n", "", explode(';', $buffer));
+
+      if ($explodedLine[0] == $userId && $explodedLine[1] == $userName) {
+        $invalidUser = false;
+        break;
+      }
+    }
+    fclose($myfile);
+
+    if ($invalidUser) return;
+
     if ($type == 'message') {
-      $user = $content->user;
+      // $user = $content->user;
       $message = $content->message;
 
-      $sendbackcontent = "<p>" . date('y/m/d h:i:s a') . " | <span class='user'>$user</span>: $message</p>";
+      $sendbackcontent = "<p>" . date('y/m/d h:i:s a') . " | <span class='user'>$userName</span>: $message</p>";
       $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
 
-      foreach ($this->cliente as $cliente) {
-        // Não enviar a mensagem para o usuário que enviou a mensagem
-        // if ($from !== $cliente) {
-        $cliente->send($sendback);
-        // }
+      foreach ($this->client as $client) {
+        // if ($from !== $client)
+        $client->send($sendback);
       }
 
       saveChat($sendbackcontent);
     } else if ($type == 'server') {
       $contenttype = $content->type; // type
-      $contentPass = $content->content; // content
+      // $contentPass = $content->content; // content
+      // $name = ------------------------------
 
       if ($contenttype == 'connected') {
         $lines = "";
         $goterror = false;
 
-        $sendbackcontent = "<p><span class='server'>Server</span>: <span class='user'>$contentPass</span> $contenttype</p>";
+        $sendbackcontent = "<p><span class='server'>Server</span>: <span class='user'>$userName</span> connected</p>";
 
-        array_push($GLOBALS['usersonline'], $contentPass);
+        array_push($GLOBALS['usersonline'], $userName);
         $myfile = fopen("usersonline.txt", "w");
         fwrite($myfile, json_encode($GLOBALS['usersonline']));
         fclose($myfile);
@@ -93,6 +95,8 @@ class system implements MessageComponentInterface
           fclose($handle);
         }
 
+        $lines .= $sendbackcontent;
+
         $sendback = '{"type": "message","content":"' . $lines . '"}';
         if ($goterror) {
           $sendback = '{"type": "message","content":"An error occure while trying to read filedata"}';
@@ -100,77 +104,58 @@ class system implements MessageComponentInterface
 
         $from->send($sendback);
 
-        $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-        $myfile = fopen("chat.txt", "a");
-        fwrite($myfile, $sendbackcontent . "\r\n");
-        fclose($myfile);
-        $this->sendAll($sendback);
+        saveChat($sendbackcontent);
+
+        foreach ($this->client as $client) {
+          if ($from != $client) {
+            $client->send($sendback);
+          }
+        }
 
         if ($GLOBALS['gamestarted']) {
           $sendbackgamestarted = '{"type":"game", "started": true}';
           $from->send($sendbackgamestarted);
         }
-      }
-
-      $sendbackcontent = "<p><span class='server'>Server</span>: <span class='user'>$contentPass</span> $contenttype</p>";
-      $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-
-      if ($contenttype == 'disconnected') {
+      } else {
+        $sendbackcontent = "<p><span class='server'>Server</span>: <span class='user'>$userName</span> disconnected</p>";
+        $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
         saveChat($sendbackcontent);
 
-        foreach ($this->cliente as $cliente) {
-          $cliente->send($sendback);
+        foreach ($this->client as $client) {
+          $client->send($sendback);
         }
 
         if (count($GLOBALS['usersonline']) > 0) {
-          $GLOBALS['searchname'] = $contentPass;
-          $GLOBALS['usersonline'] = array_filter($GLOBALS['usersonline'], "filternameout");
+          $GLOBALS['searchname'] = $userName;
+          $GLOBALS['usersonline'] = array_values(array_filter($GLOBALS['usersonline'], "filternameout"));
         }
+        $GLOBALS['searchname'] = '';
 
         $myfile = fopen("usersonline.txt", "w");
         fwrite($myfile, json_encode($GLOBALS['usersonline']));
         fclose($myfile);
 
-        $GLOBALS['searchname'] = '';
-
-        $sendbackuser = getGameInfo();
-        foreach ($this->cliente as $cliente) {
-          $cliente->send($sendbackuser);
-        }
+        $this->sendAll(getGameInfo());
       }
     } else if ($type == 'game') {
       $contenttype = $content->type; // type
-      $contentPass = $content->content; // content
 
       if ($contenttype == 'startgame') {
-        $user = $contentPass->user;
         if (count($GLOBALS['usersonline']) < 2) {
-          $sendbackcontent = "<p><span class='game'>Game</span>: Somente o usuário <span class='user'>" . $GLOBALS['usersonline'][0] . "</span> está ativo, é necessário de pelo menos 2 pessoas para iniciar</p>";
+          $sendbackcontent = "<p><span class='game'>Game</span>: Somente você está ativo, é necessário de pelo menos 2 pessoas para iniciar</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
           $from->send($sendback);
           return;
         }
 
+        // Reset all game, but leave the gameendend as it is
+        resetGame(true, false);
+
         $GLOBALS['gamestarted'] = true;
-        $GLOBALS['searchname'] = '';
-        $GLOBALS['usersthatwon'] = array();
-        $GLOBALS['turnhasplayed'] = false;
-        $GLOBALS['turnhasgotnewcard'] = false;
-        $GLOBALS['turn'] = 'giovanni';
-        $GLOBALS['direction'] = 1;
-        $GLOBALS['getcardcount'] = 0;
-        $GLOBALS['selectcolor'] = false;
-        $GLOBALS['whoisselecting'] = "";
-        $GLOBALS['selectedcolor'] = "";
-        $GLOBALS['selectedacolor'] = false;
-        $GLOBALS['selectcolor'] = false;
-        $GLOBALS['deck'] = generateNewDeck();
-        $GLOBALS['tablecard'] = null;
-        $GLOBALS['game'] = array();
 
         [$gameFileResult, $goterror] = loadGame();
 
-        // Can't load a game, so continue to creation
+        // Can't load a game Or this game endend
         if ($gameFileResult == "" || $GLOBALS['gameendend']) {
           // Clear old chat
           $myfile = fopen("chat.txt", "w");
@@ -179,7 +164,7 @@ class system implements MessageComponentInterface
           $GLOBALS['gameendend'] = false;
           $cardcount = 7;
 
-          echo "\e[41mNo game found, creating a new one\e[49m\n";
+          echo " \e[41m No game found, creating a new one \e[49m\n";
           $quantusers =  count($GLOBALS['usersonline']) * $cardcount;
           if ((count($GLOBALS['deck']) - $quantusers) < 2) {
             $olddeck = $GLOBALS['deck'];
@@ -212,8 +197,6 @@ class system implements MessageComponentInterface
             );
           }
 
-          $GLOBALS['turnhasplayed'] = false;
-          $GLOBALS['turnhasgotnewcard'] = false;
           $GLOBALS['turn'] = $GLOBALS['usersonline'][0];
 
           $validcardgot = false;
@@ -252,54 +235,37 @@ class system implements MessageComponentInterface
             }
           }
 
-          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Começou o jogo</p>";
+          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$userName</span> Começou o jogo</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
           $myfile = fopen("chat.txt", "a");
           fwrite($myfile, $sendbackcontent . "\r\n");
           fclose($myfile);
           $this->sendAll($sendback);
 
-          $sendbackgamestarted = '{"type":"game", "started": "true"}';
+          $sendbackgamestarted = '{"type":"game", "started": true}';
 
-          foreach ($this->cliente as $cliente) {
-            $cliente->send($sendback);
-            $cliente->send($sendbackgamestarted);
+          foreach ($this->client as $client) {
+            $client->send($sendback);
+            $client->send($sendbackgamestarted);
           }
 
           saveGame();
         } else {
-          echo "\e[44mGame found, loading it...\e[49m\n";
+          echo " \e[44m Game found, loading it... \e[49m\n";
+          saveLoadedGameToServer(json_decode($gameFileResult));
 
-          $gameLoaded = json_decode($gameFileResult);
-          $GLOBALS['gamestarted'] = $gameLoaded->gamestarted;
-          $GLOBALS['gameendend'] = $gameLoaded->gameendend;
-          $GLOBALS['usersthatwon'] = json_decode($gameLoaded->usersthatwon);
-          $GLOBALS['turnhasplayed'] = $gameLoaded->turnhasplayed;
-          $GLOBALS['turnhasgotnewcard'] = $gameLoaded->turnhasgotnewcard;
-          $GLOBALS['turn'] = $gameLoaded->turn;
-          $GLOBALS['direction'] = $gameLoaded->direction;
-          $GLOBALS['getcardcount'] = $gameLoaded->getcardcount;
-          $GLOBALS['selectcolor'] = $gameLoaded->selectcolor;
-          $GLOBALS['whoisselecting'] = $gameLoaded->whoisselecting;
-          $GLOBALS['selectedcolor'] = $gameLoaded->selectedcolor;
-          $GLOBALS['selectedacolor'] = $gameLoaded->selectedacolor;
-          $GLOBALS['selectcolor'] = $gameLoaded->selectcolor;
-          $GLOBALS['deck'] = json_decode($gameLoaded->deck);
-          $GLOBALS['tablecard'] = json_decode($gameLoaded->tablecard);
-          $GLOBALS['game'] = json_decode($gameLoaded->game);
-
-          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Continuou o jogo</p>";
+          $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$userName</span> Continuou o jogo</p>";
           $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
           $myfile = fopen("chat.txt", "a");
           fwrite($myfile, $sendbackcontent . "\r\n");
           fclose($myfile);
           $this->sendAll($sendback);
 
-          $sendbackgamestarted = '{"type":"game", "started": "true"}';
+          $sendbackgamestarted = '{"type":"game", "started": true}';
 
-          foreach ($this->cliente as $cliente) {
-            $cliente->send($sendback);
-            $cliente->send($sendbackgamestarted);
+          foreach ($this->client as $client) {
+            $client->send($sendback);
+            $client->send($sendbackgamestarted);
           }
         }
       }
@@ -346,9 +312,8 @@ class system implements MessageComponentInterface
           $from->send($sendback);
           return;
         }
-        $user = $contentPass->user;
 
-        if ($GLOBALS['turn'] != $user) return;
+        if ($GLOBALS['turn'] != $userName) return;
         if ($GLOBALS['turnhasplayed']) return;
         if ($GLOBALS['turnhasgotnewcard']) {
           $this->sendAll(passTurn());
@@ -362,7 +327,7 @@ class system implements MessageComponentInterface
           $currentname = $current->user;
           // $currentcards = $current->cards;
 
-          if ($currentname == $user) {
+          if ($currentname == $userName) {
             $gotcard = true;
 
             if (count($GLOBALS['deck']) < 2) {
@@ -384,19 +349,9 @@ class system implements MessageComponentInterface
             $cards = $GLOBALS['game'][$i]->cards;
 
             // Send user his cards with value and color
-            $cardCount = count($cards);
             $usercards = json_encode($cards);
-            $sendback = '{"type":"game", "who":"' . $user . '", "content":' . $usercards . '}';
+            $sendback = '{"type":"game", "who":"' . $userName . '", "content":' . $usercards . '}';
             $from->send($sendback);
-
-            // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> Loadded $cardCount cards</p>";
-            // $myfile = fopen("chat.txt", "a");
-            // fwrite($myfile, $sendbackcontent . "\r\n");
-            // fclose($myfile);
-            // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-            // foreach ($this->cliente as $cliente) {
-            //   $cliente->send($sendback);
-            // }
 
             $GLOBALS['turnhasgotnewcard'] = true;
             break;
@@ -410,12 +365,12 @@ class system implements MessageComponentInterface
         // $myfile = fopen("chat.txt", "a");
         // fwrite($myfile, $sendbackcontent . "\r\n");
         // fclose($myfile);
-        // $cliente->send($sendback);
+        // $client->send($sendback);
 
         $sendbackuser = getGameInfo();
 
-        foreach ($this->cliente as $cliente) {
-          $cliente->send($sendbackuser);
+        foreach ($this->client as $client) {
+          $client->send($sendbackuser);
         }
 
         saveGame();
@@ -426,18 +381,17 @@ class system implements MessageComponentInterface
         $canplay = false;
         $playerpos = 0;
         $playedColorSelector = false;
-        $user = $contentPass->user;
-        $value = $contentPass->value;
-        $color = $contentPass->color;
+        $value = $content->value;
+        $color = $content->color;
 
         for ($i = 0; $i < count($GLOBALS['game']); $i++) {
           $current = $GLOBALS['game'][$i];
           $currentname = $current->user;
           $currentcards = $current->cards;
-          if ($GLOBALS['turn'] != $user) break;
+          if ($GLOBALS['turn'] != $userName) break;
           if ($GLOBALS['turnhasplayed']) break;
 
-          if ($currentname == $user) {
+          if ($currentname == $userName) {
             for ($card = 0; $card < count($currentcards); $card++) {
               $currentCard = $currentcards[$card];
               if ($currentCard->value == $value && $currentCard->color == $color) {
@@ -461,7 +415,7 @@ class system implements MessageComponentInterface
 
                   $sendback = '{"type": "selectcolor","content":"select"}';
                   $from->send($sendback);
-                  $GLOBALS['whoisselecting'] = $user;
+                  $GLOBALS['whoisselecting'] = $userName;
                   $GLOBALS['selectcolor'] = true;
                   $GLOBALS['selectedacolor'] = false;
                   $playedColorSelector = true;
@@ -537,35 +491,10 @@ class system implements MessageComponentInterface
           }
         }
 
-        $myfile = fopen("debug.json", "a");
-        fwrite($myfile, '{"tablecard": "' . str_replace('"', '\\"', json_encode($GLOBALS['tablecard'])) . '", ');
-        fwrite($myfile, '"isnull": "' . ($GLOBALS['tablecard'] == null) . '", ');
-        fwrite($myfile, '"value": "' . $GLOBALS['tablecard']->value . '", ');
-        fwrite($myfile, '"color": "' . $GLOBALS['tablecard']->color . '", ');
-        fwrite($myfile, '"playerposcards": "' . str_replace('"', '\\"', json_encode($GLOBALS['game'][$playerpos]->cards)) . "\"},\r\n");
-        fclose($myfile);
-
         $currentcardvalue = $GLOBALS['tablecard']->value;
         $currentcardcolor = $GLOBALS['tablecard']->color;
 
-        // $canheplay = $canplay == true ? 'YES' : 'NO';
-        // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> $contenttype user='$user' | type='$type' | color='$color' || canheplay='$canheplay' || currentcardvalue='$currentcardvalue' && currentcardcolor='$currentcardcolor'</p>";
-        // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$user</span> turn='" . $GLOBALS['turn'] . "' | turnhasplayed='" . $GLOBALS['turnhasplayed'] . "' || canheplay='$canheplay' || deckcount='" . count($GLOBALS['deck']) . "'</p>";
-        // $sendback = '{"type": "message","content":"' . $sendbackcontent . '"}';
-        // $myfile = fopen("chat.txt", "a");
-        // fwrite($myfile, $sendbackcontent . "\r\n");
-        // fclose($myfile);
-        // $this->sendAll($sendback);
-
         if (!$canplay) return;
-
-        // && $GLOBALS['tablecard']->value == 'wild'
-        // if ($GLOBALS['selectedacolor']) {
-        //   $GLOBALS['whoisselecting'] = '';
-        //   $GLOBALS['selectedcolor'] = '';
-        //   $GLOBALS['selectedacolor'] = false;
-        //   $GLOBALS['selectcolor'] = false;
-        // }
 
         if (count($GLOBALS['game'][$playerpos]->cards) == 0) {
           $this->sendAll(passTurn());
@@ -602,7 +531,6 @@ class system implements MessageComponentInterface
         $name = $current->user;
         $cards = $current->cards;
 
-        $cardCount = count($cards);
         $usercards = json_encode($cards);
 
         $sendback = '{"type":"game", "who":"' . $name . '", "content":' . $usercards . '}';
@@ -628,8 +556,14 @@ class system implements MessageComponentInterface
       }
 
       if ($contenttype == 'selectedcolor' && $GLOBALS['selectcolor']) {
+        if (!isset($content->colorid)) {
+          echo "Cannot acess colorID " . json_encode($content) . "\n";
+          return;
+        }
+        $colorid = $content->colorid;
+
         $colors = ['red', 'blue', 'yellow', 'green'];
-        $color = $colors[$contentPass];
+        $color = $colors[$colorid];
         $GLOBALS['selectedcolor'] = $color;
         $GLOBALS['selectedacolor'] = true;
         $GLOBALS['selectcolor'] = false;
@@ -638,7 +572,7 @@ class system implements MessageComponentInterface
         $this->sendAll(passTurn());
       }
 
-      if ($GLOBALS['whoisselecting'] == $contentPass && !$GLOBALS['selectedacolor'] && $GLOBALS['selectcolor']) {
+      if ($GLOBALS['whoisselecting'] == $userName && !$GLOBALS['selectedacolor'] && $GLOBALS['selectcolor']) {
         $sendback = '{"type": "selectcolor","content":"select"}';
         $from->send($sendback);
         $playedColorSelector = true;
@@ -650,10 +584,10 @@ class system implements MessageComponentInterface
         $name = $current->user;
         $cards = $current->cards;
 
-        if ($name == $contentPass) {
+        if ($name == $userName) {
           $cardCount = count($cards);
           $usercards = json_encode($cards);
-          $sendback = '{"type":"game", "who":"' . $contentPass . '", "content":' . $usercards . '}';
+          $sendback = '{"type":"game", "who":"' . $userName . '", "content":' . $usercards . '}';
           $from->send($sendback);
 
           // $sendbackcontent = "<p><span class='game'>Game</span>: <span class='user'>$contentPass</span> Loadded $cardCount cards</p>";
@@ -667,8 +601,8 @@ class system implements MessageComponentInterface
 
       $sendbackuser = getGameInfo('userloaded');
 
-      foreach ($this->cliente as $cliente) {
-        $cliente->send($sendbackuser);
+      foreach ($this->client as $client) {
+        $client->send($sendbackuser);
       }
       // saveGame();
     }
@@ -676,7 +610,7 @@ class system implements MessageComponentInterface
 
   public function onClose(ConnectionInterface $conn)
   {
-    $this->cliente->detach($conn);
+    $this->client->detach($conn);
   }
 
   public function onError(ConnectionInterface $conn, Exception $e)
@@ -686,8 +620,8 @@ class system implements MessageComponentInterface
 
   public function sendAll($message)
   {
-    foreach ($this->cliente as $cliente) {
-      $cliente->send($message);
+    foreach ($this->client as $client) {
+      $client->send($message);
     }
   }
 }
