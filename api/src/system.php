@@ -451,6 +451,12 @@ class system implements MessageComponentInterface
                     if ($currentcardcolor != $GLOBALS['selectedcolor']) break;
                   }
 
+                  if ($GLOBALS['getcardcount'] > 0) {
+                    if ($currentcardvalue == "skip" || $currentcardvalue == "reverse") {
+                      break;
+                    }
+                  }
+
                   $canplay = true;
                   $playerpos = $i;
                   $cardplayed = array_splice($GLOBALS['game'][$i]->cards, $card, 1);
@@ -471,6 +477,19 @@ class system implements MessageComponentInterface
                     if ($currentcardcolor != $cardontablecolor && $currentcardvalue != $cardontablevalue) break;
                   } else {
                     if ($currentcardcolor != $GLOBALS['selectedcolor']) break;
+                  }
+
+                  if ($GLOBALS['getcardcount'] > 0) {
+                    // if table card is a special card is on the table
+                    if (
+                      $cardontablevalue == "wild" ||
+                      $cardontablevalue == "wilddrawfour" ||
+                      $cardontablevalue == "skip" ||
+                      $cardontablevalue == "reverse" ||
+                      $cardontablevalue == "draw2"
+                    ) {
+                      break;
+                    }
                   }
 
                   $canplay = true;
@@ -536,12 +555,6 @@ class system implements MessageComponentInterface
         $sendback = '{"type":"game", "who":"' . $name . '", "content":' . $usercards . '}';
         $from->send($sendback);
 
-        if ($playedColorSelector) {
-          $this->sendAll(getGameInfo());
-        } else {
-          $this->sendAll(passTurn());
-        }
-
         if ($GLOBALS['selectedacolor']) {
           $GLOBALS['whoisselecting'] = "";
           $GLOBALS['selectedcolor'] = "";
@@ -549,6 +562,12 @@ class system implements MessageComponentInterface
           $GLOBALS['selectcolor'] = false;
           $sendback = '{"type": "selectcolor","content":"close"}';
           $from->send($sendback);
+        }
+
+        if ($playedColorSelector) {
+          $this->sendAll(getGameInfo());
+        } else {
+          $this->sendAll(passTurn());
         }
 
         saveGame();

@@ -12,7 +12,7 @@ echo "\n";
 
 /* <start of start configs> */
 // Create needed files
-$wantedfiles = ['chat.txt', 'debug.json', 'game.json', 'users.txt', 'usersonline.txt'];
+$wantedfiles = ['chat.txt', 'game.json', 'users.txt', 'usersonline.txt'];
 $createdfiles = 0;
 foreach ($wantedfiles as $file) {
   if (!file_exists($file)) {
