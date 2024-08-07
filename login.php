@@ -161,8 +161,8 @@ function validateUser($name, $fromUno)
     // ID and Name are valid
     save($newId, $namePassed);
 
-    // echo "<hr><h1>Valid, going to UNO.PHP</h1>\n";
-    header("Location: uno.php");
+    // echo "<hr><h1>Valid, going to cardgame.php</h1>\n";
+    header("Location: cardgame.php");
     exit();
   } else {
     // echo "<b>  NOT a valid name || OR hasSession/hasCookie</b>\n";
@@ -176,7 +176,7 @@ function validateUser($name, $fromUno)
       $_SESSION["username"] = $_COOKIE["username"];
       $_SESSION["last_save"] = $_COOKIE["last_save"];
     }
-    // Check if ID's of this user and the file match, and if yes, send to uno.php
+    // Check if ID's of this user and the file match, and if yes, send to cardgame.php
     $userIsSame = false;
     [$validid, $invalidLine, $linepos] = serachUsers("id", $_SESSION["id"], '');
 
@@ -203,9 +203,8 @@ function validateUser($name, $fromUno)
         return;
       }
 
-      // echo "<hr><h1>Valid, going to UNO.PHP</h1>\n";
-      // header("Refresh:1; uno.php");
-      header("Location: uno.php");
+      // echo "<hr><h1>Valid, going to cardgame.php</h1>\n";
+      header("Location: cardgame.php");
       exit();
     } else {
       redirect("trying to acess as another user");
@@ -220,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
   validateUser("", true);
   return;
 } else if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-  // Loaded not from index.php neither uno.php, user trying to break system
+  // Loaded not from index.php neither cardgame.php, user trying to break system
   redirect('NO POST');
 }
 
