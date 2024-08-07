@@ -2,6 +2,14 @@
 
 A classic Card Game implemented using **XAMPP** and the **Ratchet library**.
 
+## Images
+
+![Image 1 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image1.png)
+![Image 2 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image2.png)
+![Image 3 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image3.png)
+![Image 4 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image4.png)
+![Image 5 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image5.png)
+
 ## Language
 
 This project was developed to be used in porguguese.
