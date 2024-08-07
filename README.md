@@ -12,20 +12,21 @@ A classic card game implemented using **XAMPP** and the **Ratchet library**.
 
 ## Language
 
-This project was developed to be used in Portuguese.
+This project was developed to be used in Portuguese, and there's a section in this readme explaining the project in Portuguese.
 
 ## Installation
 
 1. Check if you have some kind of local server and if you have PHP.
-      > I created the project using **XAMPP**, so I don't know exactly if it'll work if you use a different type of server.
+   > I created the project using **XAMPP**, so I don't know exactly if it'll work if you use a different type of server.
 2. Clone this repository.
 3. Open the project folder and navigate through to the api folder and execute the server.php.
-   > **DO NOT USE `php api/server.php`, BECAUSE THIS DOES NOT WORK**
 
 ```shell
 cd api
 php server.php
 ```
+
+**DO NOT USE `php api/server.php`, BECAUSE THIS DOES NOT WORK**
 
 ---
 
@@ -43,9 +44,10 @@ Este projeto foi desenvolvido para uso em português.
    > Eu criei o projeto usando **XAMPP**, então não tenho muita certeza se funcionara se você usar outro tipo de server.
 2. Clone o repositório.
 3. Abra a pasta do projeto e navegue para a pasta api e excute o server.php.
-      > **NÃO USE `php api/server.php`, PORQUE ISSO NÃO FUNCIONA**
 
 ```shell
 cd api
 php server.php
 ```
+
+**NÃO USE `php api/server.php`, PORQUE ISSO NÃO FUNCIONA**
