@@ -20,11 +20,6 @@
   overflow: hidden;
 }
 
-/* testHUDup
-testHUDdown */
-/* .testHUDicon {
-} */
-
 #table {
   position: relative;
   justify-self: center;
@@ -36,11 +31,6 @@ testHUDdown */
   align-items: center;
 }
 
-/* #currenttablecard {
-  justify-self: center;
-  align-self: center;
-} */
-
 #hand {
   display: flex;
   flex-wrap: wrap;
@@ -49,129 +39,6 @@ testHUDdown */
   gap: 0.5em;
   overflow: auto;
   padding: 0.5em;
-}
-
-.card {
-  --image: url(../img/card.png);
-
-  width: calc(var(--scale) * 1rem);
-  height: calc(var(--scale) * 1.75rem);
-  border-radius: 0.5rem;
-  background-color: var(--color);
-  border: solid 0.25em hsl(0, 0%, 50%);
-  position: relative;
-
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: hsla(0, 0%, 100%);
-
-  /* text-shadow: 0.1em 0.1em 0 hsl(0, 0%, 100%), 0.25em 0.125em 0 hsla(0, 0%, 20%, 0.15); */
-  text-shadow: -0.1em -0.1em 0 hsla(0, 0%, 20%), 0 -0.1em 0 hsla(0, 0%, 20%),
-    0.1em -0.1em 0 hsla(0, 0%, 20%), -0.1em 0 0 hsla(0, 0%, 20%), 0.1em 0 0 hsla(0, 0%, 20%),
-    -0.1em 0.1em 0 hsla(0, 0%, 20%), 0 0.1em 0 hsla(0, 0%, 20%), 0.1em 0.1em 0 hsla(0, 0%, 20%);
-  transition: 0.2s ease-out;
-  isolation: isolate;
-}
-
-.card::before {
-  position: absolute;
-  content: "";
-  inset: 0;
-  background-image: var(--image);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: 50% 50%;
-  image-rendering: pixelated;
-  z-index: -1;
-  pointer-events: none;
-}
-
-.card[data-selected] {
-  background-color: var(--color-hover);
-  border-color: hsl(0, 0%, 0%);
-  box-shadow: 0 0 0 0.25em white;
-}
-
-.red {
-  --color: hsl(0, 90%, 65%);
-  --color-hover: hsl(0, 100%, 50%);
-}
-
-.yellow {
-  --color: hsl(50, 90%, 65%);
-  --color-hover: hsl(50, 100%, 50%);
-}
-
-.green {
-  --color: hsl(115, 90%, 65%);
-  --color-hover: hsl(115, 100%, 50%);
-}
-
-.blue {
-  --color: hsl(230, 90%, 65%);
-  --color-hover: hsl(230, 100%, 50%);
-}
-
-.skip {
-  --image: url(../img/cardskip.png);
-}
-
-.reverse {
-  --image: url(../img/cardreverse.png);
-}
-
-.draw2 {
-  --image: url(../img/carddraw2.png);
-}
-
-.wild {
-  --image: url(../img/cardwild.png);
-}
-
-.wilddrawfour {
-  --image: url(../img/cardwilddrawfour.png);
-}
-
-.black {
-  --color: black;
-}
-
-.loading[data-value="loading"] {
-  --bg-color: hsl(204deg 9.8% 10%);
-  --spin-color-comp: hsl(0, 50%, 50%);
-
-  --wbg: linear-gradient(var(--bg-color), var(--bg-color));
-  height: 4em;
-  width: 4em;
-  flex: 0 0 4em;
-
-  margin: 1em auto;
-  border-radius: 50%;
-  border: 0.25em solid transparent;
-  animation: spin 3s cubic-bezier(0.5, -0.4, 0, 1.2) infinite;
-
-  background: var(--wbg),
-    conic-gradient(
-      from 0.15turn,
-      transparent 0turn,
-      transparent 0.05turn,
-      var(--spin-color-comp) 0.49turn,
-      var(--spin-color-comp) 0.5turn,
-      transparent 0.5turn,
-      transparent 0.55turn,
-      var(--spin-color-comp) 0.99999turn
-    );
-
-  background-origin: border-box;
-  background-clip: content-box, border-box;
-}
-
-.loading[data-value="loading"].stopspinner {
-  animation: none;
-}
-
-.loading[data-value="loading"]::before {
-  opacity: 0;
 }
 
 /* otherplayers */
@@ -184,6 +51,7 @@ testHUDdown */
   align-items: center;
   gap: 1em;
   padding: 0.5em;
+  padding-bottom: 1.75em;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -192,35 +60,36 @@ testHUDdown */
   padding: 0.25em;
   border: solid 0.2em hsla(0, 0%, 100%, 0.8);
   border-radius: 0.5em;
+  min-width: 10ch;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 .otherplayers.you {
-  background-color: hsla(0, 50%, 50%, 0.5);
+  background-color: hsl(0, 80%, 20%);
   box-shadow: 0 0 0.1em hsla(0, 0%, 100%, 0.5);
 }
 
 .otherplayers.turn {
-  background-color: hsla(50, 50%, 50%, 0.5);
-  box-shadow: 0 0 0.4em white;
+  background-color: hsla(220, 80%, 10%, 0.5);
+  box-shadow: 0 0 0.3em hsl(220, 100%, 85%);
+}
+
+.otherplayers::before {
+  position: absolute;
+  left: 50%;
+  bottom: -1.5em;
+  transform: translateX(-50%);
+  text-shadow: 0 0.1em 0 hsl(0, 0%, 0%);
 }
 
 .otherplayers.turn.you {
-  /* --color1: hsla(0, 50%, 50%, 0.5);
-  --color2: hsla(50, 50%, 50%, 0.5);
-  background: linear-gradient(
-    -45deg,
-    var(--color1) 0%,
-    var(--color2) 25%,
-    var(--color1) 50%,
-    var(--color2) 75%,
-    var(--color1) 100%
-  ); */
+  background-color: hsl(220, 65%, 30%);
   animation: 2s turnyou ease-out infinite;
-  box-shadow: 0 0 0.1em 0.1em hsla(0, 0%, 100%, 0.8);
+  box-shadow: 0 0 0.3em hsla(0, 0%, 100%, 0.8);
 }
 
 @keyframes turnyou {
@@ -250,6 +119,7 @@ testHUDdown */
   font-weight: 600;
 }
 
+/* popupselectcolor */
 #popupselectcolor {
   position: absolute;
   top: 50%;
@@ -289,4 +159,57 @@ testHUDdown */
   background-color: var(--color-hover);
   box-shadow: 0 0 0 0.4em hsla(0, 0%, 100%, 0.8);
   border-color: hsla(0, 0%, 0%, 0.8);
+}
+
+/* getcardcount */
+#getcardcount {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background-color: hsla(0, 0%, 0%, 0.8);
+  text-shadow: 0 0.08em 0 hsl(0, 0%, 0%);
+  box-shadow: 0 0 0.5em 0.1em hsla(0, 0%, 100%, 0.5);
+  padding: 1em;
+  border-radius: 0.5em;
+}
+
+#getcardcount[data-reset] {
+  animation: 2s resetCardCount ease-out forwards;
+}
+
+@keyframes resetCardCount {
+  0% {
+    background-color: hsla(0, 0%, 0%, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 3em 0.5em hsla(0, 0%, 100%, 0);
+  }
+  100% {
+    background-color: hsla(0, 0%, 0%, 1);
+    box-shadow: 0 0 2em 1em hsla(0, 0%, 100%, 0.1);
+  }
+}
+
+#getcardcount::before {
+  content: "+ ";
+}
+
+/* gamedirection */
+#gamedirection {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: hsla(0, 0%, 0%, 0.2);
+  border-radius: 0.5em;
+  transition: 0.5s ease-out;
+}
+
+main[data-close] #gamedirection {
+  right: 4rem;
 }

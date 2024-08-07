@@ -19,21 +19,32 @@ include('dumpper/dumpper.php');
   <link rel="stylesheet" href="css/icons.css" />
   <link rel="stylesheet" href="css/chat.css" />
   <link rel="stylesheet" href="css/uno.css" />
+  <link rel="stylesheet" href="css/cards.css" />
+  <link rel="stylesheet" href="css/hambuger.css" />
 
   <script src="js/functions.js" defer></script>
+  <script src="js/visualvalidation.js" defer></script>
   <script src="js/main.js" defer></script>
+  <script src="js/eventmanager.js" defer></script>
 </head>
 
 <body>
-  <p id="serverADDR" style="display: none;" aria-disabled="true"><?= $_SERVER['SERVER_ADDR']; ?></p>
-  <p id="userID" style="display: none;" aria-disabled="true"><?= $GLOBALS['id'] ?></p>
+  <script>
+    const serverADDR = "<?= $_SERVER['SERVER_ADDR']; ?>";
+    const userName = "<?= $GLOBALS['username'] ?>";
+    const userID = "<?= $GLOBALS['id'] ?>";
+  </script>
+
   <main>
     <div id="uno">
+      <p id="getcardcount">0</p>
       <div id="otherplayers"></div>
-
+      <p id="gamedirection" class="icons nomargin rightarrow"></p>
       <div id="table">
         <button class="button" id="getMoreCard">Pescar</button>
-        <div id="currenttablecard"></div>
+        <div id="currenttablecard">
+          <button data-value="loading" class="card loading currenttablecard" aria-disabled="true" disabled=""></button>
+        </div>
         <button class="button" id="playCard">Jogar carta</button>
         <div id="popupselectcolor">
           <button class="popupselectcolor__buttons red" data-id="0"></button>
@@ -47,16 +58,11 @@ include('dumpper/dumpper.php');
     </div>
     <div id="chat">
       <div id="header">
-        <h2>Chat</h2>
-        <p id="userNameP">Bem vindo <span id="userName"><?= $GLOBALS['username'] ?></span></p>
-        <div id="testHUD">
-          <p id="testHUDplayers" class="testHUDicon icons user">0</p>
-          <p id="testHUDup" class="testHUDicon icons nomargin up"></p>
-          <p id="testHUDdown" class="testHUDicon icons nomargin down"></p>
-        </div>
+        <p id="userNameP"><span id="userName"><?= $GLOBALS['username'] ?></span></p>
+        <p id="activePlayers" class="icons user">0</p>
       </div>
 
-      <div id="chatMessage">
+      <div id="chatMessage" data-loading="true">
         <div class="loadingspinner"></div>
       </div>
 
@@ -66,6 +72,12 @@ include('dumpper/dumpper.php');
         <input type="button" value="Enviar" class="button" id="sendmessage" />
       </div>
     </div>
+    <button class="button" id="menu">
+      <div class="menu__item" id="menu__item1"></div>
+      <div class="menu__item" id="menu__item2"></div>
+      <div class="menu__item" id="menu__item3"></div>
+      <p id="menu__notifications">0</p>
+    </button>
   </main>
 </body>
 

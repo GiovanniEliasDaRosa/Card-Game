@@ -60,7 +60,7 @@ function generateNewDeck()
   return $deck;
 }
 
-function getGameInfo($type = null)
+function getGameInfo($type = null, $cardstogetpassed = null)
 {
   $theircardsarray = array();
 
@@ -76,9 +76,17 @@ function getGameInfo($type = null)
     $result = [$currentUser->user, count($currentUser->cards)];
     array_push($theircardsarray, $result);
   }
+
+  $cardstoget = 0;
+  if ($cardstogetpassed != null) {
+    $cardstoget = $cardstogetpassed;
+  } else {
+    $cardstoget = $GLOBALS['getcardcount'];
+  }
+
   $turnhasgotnewcard = $GLOBALS['turnhasgotnewcard'] == true ? "true" : "false";
   $theircards = str_replace('"', '\"', json_encode($theircardsarray));
-  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard . ', "selectedcolor": "' . $GLOBALS['selectedcolor'] . '"';
+  $sendbackuser = '{"type": "users","usersactive":"' . count($GLOBALS['usersonline']) . '", "theircards":"' . $theircards . '", "turn":"' . $GLOBALS['turn'] . '", "tablecard":' . json_encode($GLOBALS['tablecard']) . ', "turnhasgotnewcard": ' . $turnhasgotnewcard . ', "selectedcolor": "' . $GLOBALS['selectedcolor'] . '", "getcardcount": "' . $cardstoget . '", "direction":"' . $GLOBALS['direction'] . '"';
 
   if ($type == 'userloaded') {
     $sendbackuser .= ', "userloaded": true}';
@@ -171,6 +179,7 @@ function reallyPassTurn()
 function passTurn()
 {
   $nextturn = reallyPassTurn();
+  $cardstoget = $GLOBALS['getcardcount'];
 
   if ($GLOBALS['getcardcount'] > 0) {
     $canIncreaseCardGetCount = false;
@@ -221,7 +230,7 @@ function passTurn()
       $GLOBALS['turnhasplayed'] = false;
       $GLOBALS['turnhasgotnewcard'] = false;
       $GLOBALS['turn'] = $GLOBALS['game'][$nextturn]->user;
-      $nextturn = reallyPassTurn();
+      $nextturn = reallyPassTurn($cardstoget);
     }
   }
 
@@ -229,7 +238,7 @@ function passTurn()
   $GLOBALS['turnhasgotnewcard'] = false;
   $GLOBALS['turn'] = $GLOBALS['game'][$nextturn]->user;
 
-  return getGameInfo('userloaded');
+  return getGameInfo('userloaded', $cardstoget);
 }
 
 function resetGame($tableCardToo = false, $gameEndedToo = false)
@@ -256,10 +265,8 @@ function resetGame($tableCardToo = false, $gameEndedToo = false)
 
   if ($tableCardToo) {
     // Set a defaut cart like loading so users know a new game is about to start
-    $tablecarload = $GLOBALS['deck'][0];
-    $tablecarload->value = 'loading';
-    $tablecarload->color = 'loading';
-    $GLOBALS['tablecard'] =  $tablecarload;
+    $tablecardload = '{"value": "loading","color": "loading"}';
+    $GLOBALS['tablecard'] = json_decode($tablecardload);
   }
 }
 
@@ -281,4 +288,23 @@ function saveLoadedGameToServer($gameLoaded)
   $GLOBALS['deck'] = json_decode($gameLoaded->deck);
   $GLOBALS['tablecard'] = json_decode($gameLoaded->tablecard);
   $GLOBALS['game'] = json_decode($gameLoaded->game);
+}
+
+function reorderCards($a, $b)
+{
+  $order = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw2", "wild", "wilddrawfour"];
+  $typeAValue = $a->value;
+  $typeBValue = $b->value;
+
+  $typeComparison = array_search($typeAValue, $order) - array_search($typeBValue, $order);
+
+  // If same sort by color
+  if ($typeComparison === 0) {
+    $colors = ['red', 'yellow', 'green', 'blue'];
+    $typeAColor = $a->color;
+    $typeBColor = $b->color;
+    return array_search($typeAColor, $colors) - array_search($typeBColor, $colors);
+  }
+
+  return $typeComparison;
 }

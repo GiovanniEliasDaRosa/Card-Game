@@ -1,3 +1,4 @@
+const chat = document.querySelector("#chat");
 const chatMessage = document.querySelector("#chatMessage");
 const message = document.querySelector("#message");
 const sendmessage = document.querySelector("#sendmessage");
@@ -9,21 +10,21 @@ const getMoreCard = document.querySelector("#getMoreCard");
 const table = document.querySelector("#table");
 const currenttablecard = document.querySelector("#currenttablecard");
 const loadingspinner = document.querySelector(".loadingspinner");
+const gamedirection = document.querySelector("#gamedirection");
+
+let getcardcountTimeout = "";
+const getcardcount = document.querySelector("#getcardcount");
 const root = document.querySelector(":root");
 let thisUserTurn = false;
+let turnhasgotnewcard = false;
 
-const popupselectcolor = document.querySelector("#popupselectcolor");
-const popupselectcolor__buttons = [...document.querySelectorAll(".popupselectcolor__buttons")];
-const popupselectcolorPlaySelected = document.querySelector("#popupselectcolorPlaySelected");
+let activePlayersTimeout = "";
+const activePlayers = document.querySelector("#activePlayers");
 
-Disable(popupselectcolor);
-
-let testHUDuptimeout = "";
-const testHUDup = document.querySelector("#testHUDup");
-let testHUDdowntimeout = "";
-const testHUDdown = document.querySelector("#testHUDdown");
-let testHUDplayerstimeout = "";
-const testHUDplayers = document.querySelector("#testHUDplayers");
+const menu__notifications = document.querySelector("#menu__notifications");
+let chatopen = true;
+let unreadnotifications = 0;
+Disable(menu__notifications);
 
 let ws = null;
 let activeUsers = 0;
@@ -33,39 +34,18 @@ let updatedUsersCard = false;
 
 Disable(getMoreCard, false);
 Disable(playCard, false);
+Disable(getcardcount);
 
-const userName = userNameElement.textContent;
-const userID = userIDElement.textContent;
+StartWebSocket();
 
-StartWebSocket(document.querySelector("#serverADDR").innerText);
-document.querySelector("#serverADDR").remove();
-
-function StartWebSocket(serverADDR) {
+function StartWebSocket() {
   if (userName == "") return;
 
-  if (serverADDR == "127.0.0.1" || userName == "Giovanni") {
-    let startGame = document.createElement("button");
-    startGame.classList = "button";
-    startGame.id = "startGame";
-    startGame.textContent = "Começar jogo";
-
-    table.appendChild(startGame);
-    startGame.onclick = () => {
-      let data = {
-        type: "game",
-        content: {
-          type: "startgame",
-          id: userID,
-          user: userName,
-        },
-      };
-      ws.send(JSON.stringify(data));
-      SendWS();
-    };
-  }
+  TryCreateStartButton();
 
   ws = new WebSocket(`ws://${serverADDR}:8080/`);
   ws.onopen = (e) => {
+    chatMessage.removeAttribute("data-loading");
     loadingspinner.remove();
     let data = {
       type: "server",
@@ -79,195 +59,49 @@ function StartWebSocket(serverADDR) {
     getInfo();
   };
 
-  ws.onerror = (e) => {
-    chatMessage.innerHTML = "<p class='server'>ERRO</p>";
-  };
-
   ws.onmessage = (response) => {
     let result = JSON.parse(response.data);
 
-    if (result.type == "selectcolor") {
-      if (result.content == "select") {
-        Disable(getMoreCard, false);
-        Disable(playCard, false);
-        Enable(popupselectcolor);
-      } else {
-        Disable(popupselectcolor);
-      }
-      return;
-    }
-
-    if (result.type == "users") {
-      activeUsers = result.usersactive;
-      UpdateActiveUsers();
-      let theircards = JSON.parse(result.theircards);
-
-      let turn = result.turn;
-      let turnhasgotnewcard = result.turnhasgotnewcard;
-
-      let tablecard = result.tablecard;
-
-      currenttablecard.innerHTML = "";
-      let color = tablecard.color;
-      if (result.selectedcolor != "") {
-        color = result.selectedcolor;
-      }
-      CreateCard(tablecard.value, color, "table");
-
-      if (!updatedUsersCard) {
-        if (tablecard.value == "draw2" || tablecard.value == "wilddrawfour") {
-          getInfo();
-          updatedUsersCard = true;
-
-          setTimeout(() => {
-            updatedUsersCard = false;
-          }, 1500);
-        }
-      }
-
-      otherplayers.innerHTML = "";
-      Disable(getMoreCard, false);
-      Disable(playCard, false);
-
-      for (let i = 0; i < theircards.length; i++) {
-        const currentUser = theircards[i];
-        let classlist = "";
-        if (currentUser[1] == 0) {
-          classlist += "won ";
-        }
-        if (currentUser[0] == userName) {
-          classlist += "you ";
-        }
-        if (currentUser[0] == turn) {
-          classlist += "turn ";
-
-          if (currentUser[0] == userName) {
-            Enable(getMoreCard, false);
-            Enable(playCard, false);
-            if (gameended) {
-              document.body.removeAttribute("data-myturn");
-              thisUserTurn = false;
-              Disable(playCard, false);
-            } else {
-              document.body.setAttribute("data-myturn", "");
-              thisUserTurn = true;
-              Enable(getMoreCard);
-            }
-
-            if (turnhasgotnewcard) {
-              getMoreCard.innerText = "Passar vez";
-            } else {
-              getMoreCard.innerText = "Pescar";
-            }
-          } else {
-            document.body.removeAttribute("data-myturn");
-            getMoreCard.innerText = "Pescar";
-          }
-        }
-        let result = `<p class='otherplayers ${classlist}'><span class='otherplayername'>${currentUser[0]}</span><span class='otherplayercardcount'>${currentUser[1]}</span></p>`;
-        otherplayers.innerHTML += result;
-      }
-    }
-
-    if (result.type != "game") {
+    let startGameButton = document.querySelector("#startGame");
+    if (startGameButton != null) {
       if (result.started != null) {
-        startGame.remove();
-        getInfo();
+        startGameButton.remove();
+        // getInfo();
         gameended = false;
       }
-      if (result.content != undefined) {
-        chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
-        let chatmessages = [...chatMessage.children];
-        let lastchat = chatmessages[chatmessages.length - 1];
-        if (lastchat != null) {
-          lastchat.scrollIntoView({ behavior: "smooth" });
-        }
-      }
-      GetWS();
-      return;
+    } else if (result.gameendend != null) {
+      TryCreateStartButton();
     }
 
-    if (result.started != null) {
-      gamealreadyrunning = true;
-      let startGameButton = document.querySelector("#startGame");
-
-      if (startGameButton != null) {
-        startGameButton.remove();
-      }
-
-      getInfo();
-      return;
-    }
-
-    if (gamealreadyrunning && result.gameendend) {
-      let whowon = result.whowon;
-
-      let resultedtext = "";
-      for (let i = 0; i < whowon.length; i++) {
-        if (i < whowon.length - 1) {
-          resultedtext += whowon[i] + ", ";
+    switch (result.type) {
+      case "message":
+        updateChatWS(result);
+        if (!chatopen) {
+          unreadnotifications++;
+          menu__notifications.innerText = unreadnotifications;
+          Enable(menu__notifications);
         } else {
-          resultedtext += whowon[i];
+          unreadnotifications = 0;
+          Disable(menu__notifications);
         }
-      }
-
-      setTimeout(() => {
-        alert("Os ganhadores foram " + resultedtext);
-      }, 500);
-
-      if (serverADDR == "127.0.0.1" || userName == "Giovanni") {
-        let startGame = document.createElement("button");
-        startGame.classList = "button";
-        startGame.id = "startGame";
-        startGame.textContent = "Começar jogo";
-
-        table.appendChild(startGame);
-        startGame.onclick = () => {
-          let data = {
-            type: "game",
-            content: {
-              type: "startgame",
-              content: {
-                user: userName,
-                id: userID,
-              },
-            },
-          };
-          ws.send(JSON.stringify(data));
-          SendWS();
-          startGame.remove();
-        };
-      }
-
-      gamealreadyrunning = false;
-      gameended = true;
-      return;
-    }
-
-    if (result.who != userName) return;
-
-    let cards = result.content;
-    hand.innerHTML = "";
-    console.log(result.content);
-
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i];
-      CreateCard(card.value, card.color);
+        break;
+      case "selectcolor":
+        selectColorWS(result);
+        break;
+      case "users":
+        updateUsersWS(result);
+        break;
+      case "game":
+        updateGameWS(result);
+        // selectcolor || users || messages
+        break;
     }
   };
-}
 
-function getInfo() {
-  console.trace();
-  let data = {
-    type: "game",
-    content: {
-      type: "getInfo",
-      user: userName,
-      id: userID,
-    },
+  ws.onerror = (e) => {
+    chatMessage.removeAttribute("data-loading");
+    ShowError("Não foi possível conectar ao server", true);
   };
-  ws.send(JSON.stringify(data));
 }
 
 const sendMessage = () => {
@@ -285,146 +119,195 @@ const sendMessage = () => {
   };
   ws.send(JSON.stringify(data));
   message.value = "";
-
-  SendWS();
 };
 
-function SendWS() {
-  clearTimeout(testHUDuptimeout);
-  testHUDup.classList.add("active");
-
-  testHUDuptimeout = setTimeout(() => {
-    testHUDup.classList.remove("active");
-  }, 1000);
-}
-
-function GetWS() {
-  clearTimeout(testHUDdowntimeout);
-  testHUDdown.classList.add("active");
-
-  testHUDdowntimeout = setTimeout(() => {
-    testHUDdown.classList.remove("active");
-  }, 1500);
-}
-
-function UpdateActiveUsers() {
-  testHUDplayers.innerText = activeUsers;
-  clearTimeout(testHUDplayerstimeout);
-  testHUDplayers.classList.add("active");
-
-  testHUDplayerstimeout = setTimeout(() => {
-    testHUDplayers.classList.remove("active");
-  }, 1500);
-}
-
-function disconectUser() {
-  let data = {
-    type: "server",
-    content: {
-      type: "disconnected",
-      id: userID,
-      user: userName,
-    },
-  };
-  ws.send(JSON.stringify(data));
-}
-
-let disconnecTimeout = "";
-let officialyDisconected = false;
-let animationPlayed = false;
-let time = 2000;
-if (isMobile) {
-  time = 2; // 2 Seconds
-} else {
-  window.onbeforeunload = () => {
-    disconectUser();
-  };
-  time = 60 * 5; // 5 minutes
-}
-document.addEventListener("visibilitychange", visibilityChanged);
-
-function visibilityChanged() {
-  clearTimeout(disconnecTimeout);
-  if (document.hidden) {
-    disconnecTimeout = setTimeout(() => {
-      disconectUser();
-      officialyDisconected = true;
-    }, time * 1000);
+/* Web Socket Functions */
+function selectColorWS(result) {
+  if (result.content == "select") {
+    Disable(getMoreCard, false);
+    Disable(playCard, false);
+    Enable(popupselectcolor);
   } else {
-    if (officialyDisconected && !animationPlayed) {
-      animationPlayed = true;
-      Disable(document.body, false);
-      let interactableElements = [...document.querySelectorAll("input, button")];
-      ws.close();
+    Disable(popupselectcolor);
+  }
+  return;
+}
 
-      let tablecard = currenttablecard.children[0];
-      if (tablecard.classList.contains("loading")) {
-        tablecard.classList.add("stopspinner");
+function updateUsersWS(result) {
+  activeUsers = result.usersactive;
+  UpdateActiveUsers();
+  let theircards = JSON.parse(result.theircards);
+
+  let turn = result.turn;
+  turnhasgotnewcard = result.turnhasgotnewcard;
+
+  let tablecard = result.tablecard;
+
+  currenttablecard.innerHTML = "";
+  let color = tablecard.color;
+  if (result.selectedcolor != "") {
+    color = result.selectedcolor;
+  }
+  CreateCard(tablecard.value, color, "table");
+
+  if (!updatedUsersCard) {
+    if (tablecard.value == "draw2" || tablecard.value == "wilddrawfour") {
+      getInfo();
+      updatedUsersCard = true;
+
+      setTimeout(() => {
+        updatedUsersCard = false;
+      }, 1500);
+    }
+  }
+
+  let getcardcountvalue = Number(result.getcardcount);
+  if (result.getcardcount > 0) {
+    getcardcount.innerText = result.getcardcount;
+    Enable(getcardcount);
+    getcardcount.removeAttribute("data-reset");
+  } else {
+    clearTimeout(getcardcountTimeout);
+    Disable(getcardcount, false);
+    getcardcount.setAttribute("data-reset", "");
+    getcardcountTimeout = setTimeout(() => {
+      Disable(getcardcount, true);
+      getcardcount.removeAttribute("data-reset");
+    }, 2000);
+  }
+
+  let direction = result.direction;
+  if (direction == -1) {
+    gamedirection.classList.add("leftarrow");
+  } else {
+    gamedirection.classList.remove("leftarrow");
+  }
+  // Show the direction of the playing
+  // leftarrow
+  // rightarrow
+  // otherplayers.innerHTML = "";
+
+  otherplayers.innerHTML = "";
+  Disable(getMoreCard, false);
+  Disable(playCard, false);
+
+  for (let i = 0; i < theircards.length; i++) {
+    const currentUser = theircards[i];
+    let classlist = "";
+    if (currentUser[1] == 0) {
+      classlist += "won ";
+    }
+    if (currentUser[0] == userName) {
+      classlist += "you ";
+    }
+    if (currentUser[0] == turn) {
+      classlist += "turn icons uparrow";
+
+      if (currentUser[0] == userName) {
+        Enable(getMoreCard, false);
+        Enable(playCard, false);
+        if (gameended) {
+          document.body.removeAttribute("data-myturn");
+          thisUserTurn = false;
+          Disable(playCard, false);
+        } else {
+          document.body.setAttribute("data-myturn", "");
+          thisUserTurn = true;
+          Enable(getMoreCard);
+        }
+
+        if (turnhasgotnewcard) {
+          getMoreCard.innerText = "Passar vez";
+        } else {
+          getMoreCard.innerText = "Pescar";
+        }
+      } else {
+        document.body.removeAttribute("data-myturn");
+        getMoreCard.innerText = "Pescar";
+        thisUserTurn = false;
       }
+    }
 
-      interactableElements.forEach((element) => {
-        Enable(element);
+    let user = currentUser[0];
+    let cards = currentUser[1];
 
-        setTimeout(() => {
-          Disable(element, false);
-        }, 100 + RandomNumber(1, 10) * 200);
-      });
+    let result = `<p class='otherplayers ${classlist}'>
+      <span class='otherplayername' data-user="${user}">${user}</span>
+      <span class='otherplayercardcount' data-cards="${cards}">${cards}</span>
+    </p>`;
+    otherplayers.innerHTML += result;
+  }
+
+  updateHandCards(getcardcountvalue);
+}
+
+function updateGameWS(result) {
+  if (result.who != userName) return;
+
+  let cards = result.content;
+  hand.innerHTML = "";
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    CreateCard(card.value, card.color);
+  }
+
+  if (result.started != null) {
+    gamealreadyrunning = true;
+    let startGameButton = document.querySelector("#startGame");
+
+    if (startGameButton != null) {
+      startGameButton.remove();
+    }
+
+    getInfo();
+    return;
+  }
+
+  if (gamealreadyrunning && result.gameendend) {
+    // let whowon = result.whowon;
+
+    TryCreateStartButton();
+
+    gamealreadyrunning = false;
+    gameended = true;
+    return;
+  }
+}
+
+function updateChatWS(result) {
+  if (result.content != undefined) {
+    chatMessage.insertAdjacentHTML("beforeend", `${result.content}`);
+    let chatmessages = [...chatMessage.children];
+    let lastchat = chatmessages[chatmessages.length - 1];
+    if (lastchat != null) {
+      lastchat.scrollIntoView({ behavior: "smooth" });
     }
   }
 }
 
-playCard.onclick = () => {
-  if (hand.querySelector("[data-selected]") == null) return;
-  // Disable(getMoreCard, false);
-  // Disable(playCard, false);
+/* Useful Functions */
+function UpdateActiveUsers() {
+  activePlayers.innerText = activeUsers;
+  clearTimeout(activePlayersTimeout);
+  activePlayers.classList.add("active");
 
-  let selectedCard = hand.querySelector("[data-selected]");
-  let value = selectedCard.dataset.value;
-  let color = selectedCard.classList[1];
-  console.log(`SEND -> value='${value}' color='${color}'`);
+  activePlayersTimeout = setTimeout(() => {
+    activePlayers.classList.remove("active");
+  }, 1500);
+}
 
+function getInfo() {
   let data = {
     type: "game",
     content: {
-      type: "wanttoplaycard",
-      user: userName,
-      id: userID,
-      value: value,
-      color: color,
-    },
-  };
-  ws.send(JSON.stringify(data));
-  SendWS();
-};
-
-getMoreCard.onclick = () => {
-  let data = {
-    type: "game",
-    content: {
-      type: "wanttogetcard",
+      type: "getInfo",
       user: userName,
       id: userID,
     },
   };
   ws.send(JSON.stringify(data));
-  SendWS();
-  if (isMobile) {
-    getMoreCard.blur();
-  }
-
-  Disable(getMoreCard, false);
-};
-
-message.onkeyup = (e) => {
-  if (e.key != "Enter") return;
-  sendMessage();
-};
-
-sendmessage.onclick = () => {
-  sendMessage();
-};
-
-const hand = document.querySelector("#hand");
+}
 
 function CreateCard(type, color, where = null) {
   let newCard = document.createElement("button");
@@ -435,6 +318,9 @@ function CreateCard(type, color, where = null) {
     newCard.textContent = type;
   } else {
     newCard.className = `card ${color} ${type}`;
+    if (type == "wilddrawfour") {
+      newCard.textContent = "+4";
+    }
   }
 
   if (where == null) {
@@ -451,56 +337,53 @@ function CreateCard(type, color, where = null) {
     };
     hand.appendChild(newCard);
   } else {
+    newCard.classList.add("currenttablecard");
     currenttablecard.appendChild(newCard);
+    Disable(currenttablecard.children[0], false);
   }
 }
 
-window.onresize = () => {
-  ScaleCards();
-};
+function TryCreateStartButton() {
+  if (serverADDR == "127.0.0.1" || userName == "Giovanni") {
+    let startGame = document.createElement("button");
+    startGame.classList = "button";
+    startGame.id = "startGame";
+    startGame.textContent = "Começar jogo";
 
-ScaleCards();
-
-function ScaleCards() {
-  let prefered = window.innerWidth;
-  if (window.innerHeight < window.innerWidth) {
-    prefered = window.innerHeight;
+    table.appendChild(startGame);
+    startGame.onclick = () => {
+      let data = {
+        type: "game",
+        content: {
+          type: "startgame",
+          id: userID,
+          user: userName,
+        },
+      };
+      ws.send(JSON.stringify(data));
+    };
   }
-  let result = Clamp(prefered / 2 / 64, 0, 5);
-  root.style = `--scale: ${result}`;
 }
 
-popupselectcolor__buttons.forEach((currentButton) => {
-  currentButton.onclick = () => {
-    if (currentButton.dataset.selected != null) {
-      currentButton.removeAttribute("data-selected");
-    } else {
-      popupselectcolor__buttons.forEach((button) => {
-        button.removeAttribute("data-selected");
-      });
-      currentButton.setAttribute("data-selected", "");
-    }
-  };
-});
+function ShowError(text, reset = false) {
+  let tablecard = currenttablecard.children[0];
+  if (tablecard.classList.contains("loading")) {
+    tablecard.classList.add("stopspinner");
+    tablecard.classList.add("error");
+  }
 
-popupselectcolorPlaySelected.onclick = () => {
-  let selected = document.querySelector(".popupselectcolor__buttons[data-selected]");
-  if (selected == null) return;
-
-  let colorid = Number(selected.dataset.id);
-  if (colorid < 0 || colorid > 3) return;
-  data = {
-    type: "game",
-    content: {
-      id: userID,
-      user: userName,
-      type: "selectedcolor",
-      colorid: colorid,
-    },
-  };
-  ws.send(JSON.stringify(data));
-  selected.removeAttribute("data-selected");
-  return;
-};
-
-// Enable(popupselectcolor);
+  chatMessage.setAttribute("data-haserror", "true");
+  if (reset) {
+    chatMessage.innerHTML = `<div class='showerror'>
+      <img src='img/error.png' />
+      <p class='error'>${text}</p>
+    </div>`;
+  } else {
+    document.body.innerHTML += `<div class='showerrorAbsolute'>
+      <div class='showerror'>
+        <img src='img/error.png' />
+        <p class='error'>${text}</p>
+      </div>
+    </div>`;
+  }
+}

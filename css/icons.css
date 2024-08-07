@@ -15,14 +15,18 @@
   margin-right: 0;
 }
 
-.icons.down::before {
-  content: "\f150";
-}
-
-.icons.up::before {
-  content: "\f151";
-}
-
 .icons.user::before {
   content: "\f007";
+}
+
+.icons.uparrow::before {
+  content: "\f062";
+}
+
+.icons.rightarrow::before {
+  content: "\f061";
+}
+
+.icons.leftarrow::before {
+  content: "\f060";
 }

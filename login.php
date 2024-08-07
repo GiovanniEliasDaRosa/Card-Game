@@ -171,8 +171,7 @@ function validateUser($name, $fromUno)
     }
 
     if (!$hassession) {
-      echo "<b>    NO session</b> geting the <b>cookie</b> value\n";
-      // Save as session
+      // no session geting the cookie value
       $_SESSION["id"] = $_COOKIE["id"];
       $_SESSION["username"] = $_COOKIE["username"];
       $_SESSION["last_save"] = $_COOKIE["last_save"];

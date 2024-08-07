@@ -1,0 +1,102 @@
+#menu {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  width: 3em;
+  height: 3em;
+
+  font-size: 1rem;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: transparent;
+  padding: 0.5em;
+  border-radius: 0.5em;
+  border: solid 0.1em hsla(0, 0%, 100%, 0.5);
+}
+
+#menu__notifications {
+  position: absolute;
+  top: -1em;
+  right: -1em;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  background-color: hsl(0, 73%, 53%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 600;
+  line-height: 0.5em;
+}
+
+.menu__item {
+  width: 100%;
+  height: 0.3em;
+  background-color: white;
+  border-radius: 0.25em;
+}
+
+#menu[data-open] #menu__item1 {
+  animation: 1s animatemenu__item1 forwards;
+}
+
+#menu[data-open] #menu__item2 {
+  animation: 1s animatemenu__item2 forwards;
+}
+
+#menu[data-open] #menu__item3 {
+  animation: 1s animatemenu__item3 forwards;
+}
+
+#menu[data-prepare-close] #menu__item1 {
+  transform: translateY(0.8em) rotate(-45deg);
+}
+
+#menu[data-prepare-close] #menu__item2 {
+  transform: scaleX(0);
+}
+
+#menu[data-prepare-close] #menu__item3 {
+  transform: translateY(-0.8em) rotate(45deg);
+}
+
+#menu[data-close] #menu__item1 {
+  animation: 0.5s animatemenu__item1 forwards reverse;
+}
+#menu[data-close] #menu__item2 {
+  animation: 0.5s animatemenu__item2 forwards reverse;
+}
+#menu[data-close] #menu__item3 {
+  animation: 0.5s animatemenu__item3 forwards reverse;
+}
+
+@keyframes animatemenu__item1 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: translateY(0.8em) rotate(-45deg);
+  }
+}
+
+@keyframes animatemenu__item2 {
+  0% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+@keyframes animatemenu__item3 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: translateY(-0.8em) rotate(45deg);
+  }
+}
