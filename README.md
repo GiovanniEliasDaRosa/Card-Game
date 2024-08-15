@@ -2,6 +2,8 @@
 
 A classic card game implemented using **XAMPP** and the **Ratchet library**.
 
+![Cover image](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/Card.png)
+
 ## Images
 
 ![Image 1 of the game](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image1.png)
