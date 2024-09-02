@@ -1,6 +1,6 @@
 # Card Game
 
-Este projeto foi desenvolvido para uso em português, mas clicando no botão o projeto será explicado em Inglês.
+Este projeto foi desenvolvido para uso em português, mas clicando no botão abaixo o projeto será explicado em Inglês.
 
 [![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/GiovanniEliasDaRosa/Card-Game/blob/main/README.md)
 
@@ -8,7 +8,7 @@ Um jogo clássico de cartas implementado usando **XAMPP** e o **Ratchet library*
 
 ![Imagem de capa](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/Card.png)
 
-## Images
+## Capturas de tela
 
 ![Imagem 1 do jogo](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image1.png)
 ![Imagem 2 do jogo](https://raw.githubusercontent.com/GiovanniEliasDaRosa/Card-Game/main/readmeimg/image2.png)
