@@ -17,9 +17,6 @@ function setNewCookie($name, $value)
 
 function redirect($cause, $return = null)
 {
-  // echo $cause . "\n";
-  // echo "$cause"; // Enable to debug in the future
-  // header("Refresh:1; index.php");
   if ($return != null) {
     header("Location: index.php?$return");
   } else {
@@ -88,10 +85,6 @@ function resetSave()
 
 function save($id, $username, $saveonfile = true, $linepos = null)
 {
-  // $savedonfile = $saveonfile == true ? "saveonfile" : "just reassign";
-  // echo "Saved '$id', '$username', '$savedonfile'";
-
-  // return;
   $thistime = time();
 
   // Save as session
@@ -144,10 +137,6 @@ function validateUser($name, $fromUno)
   [$validname, $invalidLine] = serachUsers("name", $namePassed, '');
 
   if ($noSessionNoCookie && $validname) {
-    // Create a new user then
-    // echo "<b>    No session and no cookie</b>";
-    // echo "<b>  valid name - SAVE NEW</b>\n";
-
     $valid = false;
     while (!$valid) {
       $newId = createID();
@@ -161,11 +150,11 @@ function validateUser($name, $fromUno)
     // ID and Name are valid
     save($newId, $namePassed);
 
-    // echo "<hr><h1>Valid, going to cardgame.php</h1>\n";
+    // Valid, going to cardgame.php
     header("Location: cardgame.php");
     exit();
   } else {
-    // echo "<b>  NOT a valid name || OR hasSession/hasCookie</b>\n";
+    // NOT a valid name || OR hasSession/hasCookie
     if ($noSessionNoCookie) {
       redirect('No session and no cookie / not a valid name', "e=invalidname&v=$name");
     }
@@ -192,7 +181,7 @@ function validateUser($name, $fromUno)
 
     // Check if session or cookie has a name saved
     if ($userIsSame) {
-      // echo "<b>    Is same user</b>\n";
+      // Is same user
 
       // ID and Name are valid, so resave them and don't save a new line on file
       save($_SESSION["id"], $_SESSION["username"], false, $linepos);
@@ -203,7 +192,7 @@ function validateUser($name, $fromUno)
         return;
       }
 
-      // echo "<hr><h1>Valid, going to cardgame.php</h1>\n";
+      // Valid, going to cardgame.php
       header("Location: cardgame.php");
       exit();
     } else {

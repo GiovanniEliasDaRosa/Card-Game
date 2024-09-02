@@ -2,26 +2,17 @@
 session_start();
 ob_start();
 
-// session_destroy();
-// if (isset($_SERVER['HTTP_COOKIE'])) {
-//   $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
-//   foreach ($cookies as $cookie) {
-//     $parts = explode('=', $cookie);
-//     $name = trim($parts[0]);
-//     setcookie($name, '', time() - 1000);
-//     setcookie($name, '', time() - 1000, '/');
-//   }
-// }
-
 $hassession = false;
 $hascookie = false;
 
 if (isset($_SESSION["username"])) {
   $hassession = true;
 }
+
 if (isset($_COOKIE["username"])) {
   $hascookie = true;
 }
+
 $username = "";
 $hideTheWarning = false;
 $usernameInputIsDisabled = "";
@@ -42,7 +33,6 @@ if ($hideTheWarning) {
   $warningIsDisabled = $hideElem;
 }
 
-
 $errorDisabled = $hideElem;
 $errorContent = "";
 
@@ -57,15 +47,6 @@ if (isset($_GET["e"])) {
     }
   }
 }
-
-
-
-
-// if (isset($_COOKIE["username"])) {
-//   $username = $_COOKIE["username"];
-// } else {
-//   $username = '';
-// }
 ?>
 
 <!DOCTYPE html>

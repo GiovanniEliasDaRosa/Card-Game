@@ -3,7 +3,6 @@
 include('login.php');
 // Import custom dumper made by Giovanni Elias da Rosa
 include('dumpper/dumpper.php');
-
 ?>
 
 <!DOCTYPE html>
